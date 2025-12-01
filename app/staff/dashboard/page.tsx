@@ -1,0 +1,184 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import AttendanceCalendar from '@/components/AttendanceCalendar';
+import PunchButtons from '@/components/PunchButtons';
+import AttendanceLogsList from '@/components/AttendanceLogsList';
+import LocationTest from '@/components/LocationTest';
+
+export default function StaffDashboardPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [attendanceData, setAttendanceData] = useState<any>(null);
+  const [holidays, setHolidays] = useState<any>([]);
+  const [todayStatus, setTodayStatus] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
+
+  useEffect(() => {
+    // Check authentication
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+
+    if (!token || !userData) {
+      router.push('/');
+      return;
+    }
+
+    const parsedUser = JSON.parse(userData);
+    if (parsedUser.role !== 'STAFF') {
+      router.push('/admin/staff');
+      return;
+    }
+
+    setUser(parsedUser);
+    fetchAttendance(selectedMonth);
+  }, [router, selectedMonth]);
+
+  const fetchAttendance = async (month: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch attendance data
+      const attendanceResponse = await fetch(
+        `/api/staff/attendance?month=${month}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (attendanceResponse.ok) {
+        const data = await attendanceResponse.json();
+        setAttendanceData(data.attendanceRecords);
+        setTodayStatus(data.todayStatus);
+      }
+
+      // Fetch holidays
+      const holidaysResponse = await fetch(`/api/holidays?month=${month}`);
+      if (holidaysResponse.ok) {
+        const holidaysData = await holidaysResponse.json();
+        setHolidays(holidaysData.holidays || []);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
+  };
+
+  const handleActionSuccess = () => {
+    fetchAttendance(selectedMonth);
+  };
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  const profile = user.staffProfile;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {profile?.fullName || user.email}
+              </h1>
+              <p className="text-sm text-gray-600">Staff Dashboard</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+            >
+              Logout
+            </button>
+          </div>
+
+          {/* Staff Info */}
+          {profile && (
+            <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-700 font-medium">Office Hours:</span>{' '}
+                <span className="font-semibold text-gray-900">
+                  {profile.officeTimeIn} - {profile.officeTimeOut}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-700 font-medium">Working Days:</span>{' '}
+                <span className="font-semibold text-gray-900">
+                  {JSON.parse(profile.workingDays).join(', ')}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Location Test - Show if there's an issue */}
+        <LocationTest />
+
+        {/* Punch Buttons */}
+        <div className="mb-8">
+          <PunchButtons
+            todayStatus={todayStatus}
+            onSuccess={handleActionSuccess}
+            workingDays={profile ? JSON.parse(profile.workingDays) : []}
+          />
+        </div>
+
+        {/* Month Selector */}
+        <div className="mb-6">
+          <label htmlFor="month" className="block text-sm font-medium text-gray-900 mb-2">
+            Select Month
+          </label>
+          <input
+            id="month"
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+          />
+        </div>
+
+        {/* Attendance Calendar */}
+        <AttendanceCalendar
+          attendanceData={attendanceData || []}
+          selectedMonth={selectedMonth}
+          workingDays={profile ? JSON.parse(profile.workingDays) : []}
+          officeTimeIn={profile?.officeTimeIn}
+          officeTimeOut={profile?.officeTimeOut}
+          holidays={holidays}
+        />
+
+        {/* Attendance Logs List */}
+        <div className="mt-8">
+          <AttendanceLogsList
+            logs={attendanceData || []}
+            onDelete={handleActionSuccess}
+          />
+        </div>
+      </main>
+    </div>
+  );
+}
+

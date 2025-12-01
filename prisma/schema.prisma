@@ -1,0 +1,105 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(STAFF)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  staffProfile       StaffProfile?
+  attendanceRecords  AttendanceRecord[]
+  lunchBreaks        LunchBreak[]
+
+  @@map("users")
+}
+
+model StaffProfile {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @unique
+  fullName      String
+  salary        Decimal  @db.Decimal(10, 2)
+  workingDays   String   // Store as JSON string: ["Monday", "Tuesday", ...]
+  officeTimeIn  String   // Format: "09:00"
+  officeTimeOut String   // Format: "18:00"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("staff_profiles")
+}
+
+model AttendanceRecord {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  punchInTime  DateTime
+  punchInLat   Decimal?  @db.Decimal(10, 8)
+  punchInLng   Decimal?  @db.Decimal(11, 8)
+  punchOutTime DateTime?
+  punchOutLat  Decimal?  @db.Decimal(10, 8)
+  punchOutLng  Decimal?  @db.Decimal(11, 8)
+  workingHours Decimal?  @db.Decimal(5, 2) // Calculated working hours
+  workDone     String?   @db.Text // Daily work summary
+  date         DateTime  @db.Date // Date of attendance (for easy querying)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lunchBreaks LunchBreak[]
+
+  @@index([userId, date])
+  @@map("attendance_records")
+}
+
+model LunchBreak {
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  attendanceRecordId Int
+  lunchStartTime     DateTime
+  lunchStartLat      Decimal?  @db.Decimal(10, 8)
+  lunchStartLng      Decimal?  @db.Decimal(11, 8)
+  lunchEndTime       DateTime?
+  lunchEndLat        Decimal?  @db.Decimal(10, 8)
+  lunchEndLng        Decimal?  @db.Decimal(11, 8)
+  duration           Int?      // Duration in minutes
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relations
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attendanceRecord AttendanceRecord @relation(fields: [attendanceRecordId], references: [id], onDelete: Cascade)
+
+  @@index([userId, attendanceRecordId])
+  @@map("lunch_breaks")
+}
+
+model Holiday {
+  id          Int      @id @default(autoincrement())
+  name        String
+  date        DateTime @db.Date
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@map("holidays")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+

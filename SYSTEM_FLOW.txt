@@ -1,0 +1,786 @@
+================================================================================
+              STAFF ATTENDANCE SYSTEM - VISUAL FLOW DIAGRAM
+================================================================================
+
+                         USER AUTHENTICATION FLOW
+================================================================================
+
+                          [http://localhost:3000]
+                                    |
+                              Login Page
+                                    |
+                    +--------------+---------------+
+                    |                              |
+            Admin Login                      Staff Login
+          (admin@example.com)              (staff@example.com)
+                    |                              |
+          POST /api/auth/login           POST /api/auth/login
+                    |                              |
+            JWT Token Created                JWT Token Created
+                    |                              |
+         +----------+----------+         +---------+---------+
+         |                     |         |                   |
+    HTTP-only Cookie      localStorage   HTTP-only Cookie   localStorage
+         |                     |         |                   |
+         +---------+-----------+         +---------+---------+
+                   |                               |
+           Admin Dashboard                  Staff Dashboard
+         /admin/staff                    /staff/dashboard
+
+
+================================================================================
+                         ADMIN WORKFLOW
+================================================================================
+
+                           Admin Dashboard
+                        /admin/staff page
+                                |
+                    +-----------+-----------+
+                    |                       |
+              View All Staff          Create New Staff
+                    |                       |
+         +----------+----------+    +-------+-------+
+         |                     |    |               |
+    Staff List Table      Delete Staff   Fill Form:
+         |                     |          - Email
+    - Name                     |          - Password
+    - Email               DELETE API      - Full Name
+    - Salary                   |          - Salary
+    - Office Hours             |          - Working Days
+    - Working Days    /api/admin/staff/:id - Office Hours
+                                |               |
+                          Staff Deleted    POST /api/admin/staff
+                                                |
+                                          Staff Created
+                                                |
+                                    Email & password saved
+                                    Staff can now login
+
+
+================================================================================
+                         STAFF DAILY WORKFLOW
+================================================================================
+
+                         Staff Dashboard
+                      /staff/dashboard
+                              |
+              +---------------+---------------+
+              |                               |
+        Monthly Calendar              Punch Actions Panel
+              |                               |
+    View Past Attendance            Check Current Status
+              |                               |
+    +--------+--------+              +-------+-------+
+    |                 |              |               |
+  Green Days     Red Days      Not Punched In   Punched In
+  (Present)      (Absent)           |               |
+    |                 |              v               v
+  Shows:         Shows:         PUNCH IN         PUNCH OUT
+  - In Time      - Missed           or               or
+  - Out Time     - Date          LUNCH START    LUNCH END
+  - Hours                            |               |
+                                     v               v
+                              Location Request   Location Request
+                                     |               |
+                              User Allows GPS    User Allows GPS
+                                     |               |
+                              Coordinates Sent   Coordinates Sent
+                                     |               |
+                              API Call Made      API Call Made
+                                     |               |
+                              Record Saved       Record Updated
+
+
+================================================================================
+                    DETAILED PUNCH IN/OUT FLOW
+================================================================================
+
+STEP 1: PUNCH IN
+================
+Staff Dashboard → Click "🕐 Punch In" Button
+        |
+        +--> Browser requests location permission
+        |
+        +--> User allows location
+        |
+        +--> GPS captures: latitude, longitude
+        |
+        +--> POST /api/staff/punch-in
+        |    Body: { latitude, longitude }
+        |    Headers: Authorization: Bearer <JWT_TOKEN>
+        |
+        +--> API validates JWT token
+        |
+        +--> API checks if already punched in today
+        |
+        +--> Create AttendanceRecord:
+        |    {
+        |      userId: 123,
+        |      punchInTime: "2024-11-28 09:00:00",
+        |      punchInLat: 25.2048,
+        |      punchInLng: 55.2708,
+        |      date: "2024-11-28"
+        |    }
+        |
+        +--> Status changes to "Punched In"
+        |
+        +--> Dashboard refreshes
+        |
+        +--> Shows: "Punch In: 09:00 AM"
+
+
+STEP 2: LUNCH BREAK START
+==========================
+Staff Dashboard → Click "🍽️ Start Lunch" Button
+        |
+        +--> Browser requests location permission
+        |
+        +--> GPS captures: latitude, longitude
+        |
+        +--> POST /api/staff/lunch-start
+        |    Body: { latitude, longitude }
+        |
+        +--> API finds today's AttendanceRecord
+        |
+        +--> Create LunchBreak:
+        |    {
+        |      userId: 123,
+        |      attendanceRecordId: 456,
+        |      lunchStartTime: "2024-11-28 13:00:00",
+        |      lunchStartLat: 25.2048,
+        |      lunchStartLng: 55.2708
+        |    }
+        |
+        +--> Status changes to "On Lunch Break"
+        |
+        +--> Dashboard shows lunch button: "✓ End Lunch Break"
+
+
+STEP 3: LUNCH BREAK END
+========================
+Staff Dashboard → Click "✓ End Lunch Break" Button
+        |
+        +--> Browser requests location permission
+        |
+        +--> GPS captures: latitude, longitude
+        |
+        +--> POST /api/staff/lunch-end
+        |    Body: { latitude, longitude }
+        |
+        +--> API finds active lunch break
+        |
+        +--> Calculate duration:
+        |    lunchEndTime - lunchStartTime = 60 minutes
+        |
+        +--> Update LunchBreak:
+        |    {
+        |      lunchEndTime: "2024-11-28 14:00:00",
+        |      lunchEndLat: 25.2048,
+        |      lunchEndLng: 55.2708,
+        |      duration: 60
+        |    }
+        |
+        +--> Status changes back to "Punched In"
+
+
+STEP 4: PUNCH OUT
+==================
+Staff Dashboard → Click "🏁 Punch Out" Button
+        |
+        +--> Browser requests location permission
+        |
+        +--> GPS captures: latitude, longitude
+        |
+        +--> POST /api/staff/punch-out
+        |    Body: { latitude, longitude }
+        |
+        +--> API checks for active lunch break
+        |    (must end lunch before punch out)
+        |
+        +--> Calculate working hours:
+        |    Total Time = 18:00 - 09:00 = 9 hours
+        |    Lunch Time = 60 minutes = 1 hour
+        |    Working Hours = 9 - 1 = 8 hours
+        |
+        +--> Update AttendanceRecord:
+        |    {
+        |      punchOutTime: "2024-11-28 18:00:00",
+        |      punchOutLat: 25.2048,
+        |      punchOutLng: 55.2708,
+        |      workingHours: 8.00
+        |    }
+        |
+        +--> Status changes to "Punched Out"
+        |
+        +--> Shows: "Attendance completed! 🎉"
+        |
+        +--> Calendar updates with green box
+        |    Shows: In: 09:00, Out: 18:00, Hours: 8.00
+
+
+================================================================================
+                         DATABASE RELATIONSHIPS
+================================================================================
+
+User (Authentication)
+  |
+  +--> StaffProfile (1:1)
+  |     - fullName
+  |     - salary
+  |     - workingDays
+  |     - officeTimeIn
+  |     - officeTimeOut
+  |
+  +--> AttendanceRecord (1:Many)
+        - punchInTime, punchInLat, punchInLng
+        - punchOutTime, punchOutLat, punchOutLng
+        - workingHours
+        - date
+        |
+        +--> LunchBreak (1:Many)
+              - lunchStartTime, lunchStartLat, lunchStartLng
+              - lunchEndTime, lunchEndLat, lunchEndLng
+              - duration
+
+
+Example Data:
+=============
+User:
+  id: 1
+  email: "john@company.com"
+  role: "STAFF"
+
+StaffProfile:
+  userId: 1
+  fullName: "John Doe"
+  salary: 50000
+  workingDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+  officeTimeIn: "09:00"
+  officeTimeOut: "18:00"
+
+AttendanceRecord (Nov 28):
+  id: 100
+  userId: 1
+  date: "2024-11-28"
+  punchInTime: "2024-11-28 09:05:00"
+  punchInLat: 25.2048
+  punchInLng: 55.2708
+  punchOutTime: "2024-11-28 18:02:00"
+  punchOutLat: 25.2048
+  punchOutLng: 55.2708
+  workingHours: 8.00
+
+LunchBreak:
+  id: 200
+  userId: 1
+  attendanceRecordId: 100
+  lunchStartTime: "2024-11-28 13:00:00"
+  lunchStartLat: 25.2048
+  lunchStartLng: 55.2708
+  lunchEndTime: "2024-11-28 14:00:00"
+  lunchEndLat: 25.2048
+  lunchEndLng: 55.2708
+  duration: 60
+
+
+================================================================================
+                         API REQUEST/RESPONSE FLOW
+================================================================================
+
+EXAMPLE: Punch In Request
+==========================
+
+1. Frontend (React Component)
+   ↓
+   PunchButtons.tsx
+   ↓
+   handlePunchIn() called
+   ↓
+   getCurrentLocation() → Browser Geolocation API
+   ↓
+   { latitude: 25.2048, longitude: 55.2708 }
+   ↓
+   fetch('/api/staff/punch-in', {
+     method: 'POST',
+     headers: {
+       'Content-Type': 'application/json',
+       'Authorization': 'Bearer eyJhbGc...'
+     },
+     body: JSON.stringify({ latitude, longitude })
+   })
+
+2. Backend (Next.js API Route)
+   ↓
+   /app/api/staff/punch-in/route.ts
+   ↓
+   requireAuth(request) → Verify JWT
+   ↓
+   Get userId from token
+   ↓
+   Check if already punched in
+   ↓
+   prisma.attendanceRecord.create({
+     userId, punchInTime, punchInLat, punchInLng, date
+   })
+   ↓
+   Return Response:
+   {
+     success: true,
+     attendance: { ... }
+   }
+
+3. Frontend (React Component)
+   ↓
+   Receive response
+   ↓
+   onSuccess() called
+   ↓
+   fetchAttendance() → Refresh data
+   ↓
+   Component re-renders with new status
+
+
+================================================================================
+                    MONTHLY CALENDAR DATA FLOW
+================================================================================
+
+Staff Dashboard
+      |
+      v
+Select Month: "2024-11"
+      |
+      v
+GET /api/staff/attendance?month=2024-11
+      |
+      v
+API receives request
+      |
+      v
+Parse month: startDate = 2024-11-01, endDate = 2024-11-30
+      |
+      v
+Query database:
+  attendanceRecords = SELECT * FROM attendance_records
+                      WHERE userId = 123
+                      AND date BETWEEN '2024-11-01' AND '2024-11-30'
+      |
+      v
+Include related lunch breaks
+      |
+      v
+Return:
+{
+  attendanceRecords: [
+    {
+      id: 1,
+      date: "2024-11-01",
+      punchInTime: "09:00",
+      punchOutTime: "18:00",
+      workingHours: 8.00,
+      lunchBreaks: [...]
+    },
+    // ... more records
+  ],
+  todayStatus: {
+    status: "punched_in",
+    record: {...}
+  }
+}
+      |
+      v
+Frontend receives data
+      |
+      v
+AttendanceCalendar component
+      |
+      v
+Generate calendar grid (7x5 or 7x6)
+      |
+      v
+For each day:
+  - Check if working day
+  - Find attendance record
+  - Display status:
+    * Green if present
+    * Red if absent
+    * Yellow if active
+    * Gray if off day
+      |
+      v
+Calculate statistics:
+  - Total working days
+  - Days present
+  - Total hours worked
+      |
+      v
+Display calendar with stats
+
+
+================================================================================
+                         SECURITY FLOW
+================================================================================
+
+Password Security:
+==================
+User Registration
+      |
+      v
+Password: "mypassword123"
+      |
+      v
+bcrypt.hash(password, 10)
+      |
+      v
+Hashed: "$2a$10$N9qo8u..."
+      |
+      v
+Stored in database (NEVER plain text)
+
+
+Login:
+======
+User enters password
+      |
+      v
+bcrypt.compare(enteredPassword, hashedPassword)
+      |
+      v
+Returns true/false
+      |
+      v
+If true: Generate JWT token
+
+
+JWT Token:
+==========
+{
+  userId: 123,
+  email: "john@company.com",
+  role: "STAFF"
+}
+      |
+      v
+jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
+      |
+      v
+Token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      |
+      v
+Sent to client:
+  - localStorage (accessible by JS)
+  - HTTP-only cookie (not accessible by JS - more secure)
+
+
+API Authorization:
+==================
+Request → API Endpoint
+      |
+      v
+requireAuth(request)
+      |
+      v
+Extract token from:
+  - Authorization header: "Bearer <token>"
+  - Cookie: "token=<token>"
+      |
+      v
+jwt.verify(token, JWT_SECRET)
+      |
+      v
+If valid: Extract userId, email, role
+If invalid: Return 401 Unauthorized
+      |
+      v
+Check role for admin endpoints:
+  requireAdmin() → role must be "ADMIN"
+      |
+      v
+Proceed with request
+
+
+================================================================================
+                    WORKING HOURS CALCULATION
+================================================================================
+
+Example Scenario:
+=================
+Punch In:  09:00 AM
+Lunch:     01:00 PM - 02:00 PM (60 minutes)
+Punch Out: 06:00 PM
+
+Calculation:
+============
+Total Time = Punch Out - Punch In
+           = 18:00 - 09:00
+           = 9 hours = 540 minutes
+
+Lunch Duration = 60 minutes
+
+Working Time = Total Time - Lunch Duration
+             = 540 - 60
+             = 480 minutes
+             = 8 hours
+
+Stored in Database:
+===================
+AttendanceRecord.workingHours = 8.00
+
+Multiple Lunch Breaks:
+======================
+Lunch 1: 12:00 PM - 12:30 PM (30 minutes)
+Lunch 2: 03:00 PM - 03:15 PM (15 minutes)
+
+Total Lunch = 30 + 15 = 45 minutes
+
+Working Time = 540 - 45 = 495 minutes = 8.25 hours
+
+
+================================================================================
+                    LOCATION TRACKING FLOW
+================================================================================
+
+User Clicks Punch Button
+      |
+      v
+navigator.geolocation.getCurrentPosition()
+      |
+      v
+Browser asks user: "Allow location access?"
+      |
+      +---Yes---------+----------No-----------+
+      |                                        |
+      v                                        v
+Get GPS Coordinates                    Error: "Location denied"
+      |                                        |
+      v                                        v
+Position object:                     Show error message
+{                                    Cannot proceed
+  coords: {
+    latitude: 25.2048,
+    longitude: 55.2708,
+    accuracy: 10,        (meters)
+    altitude: null,
+    altitudeAccuracy: null,
+    heading: null,
+    speed: null
+  },
+  timestamp: 1234567890
+}
+      |
+      v
+Extract latitude & longitude
+      |
+      v
+Send to API with attendance action
+      |
+      v
+Store in database:
+  - punchInLat, punchInLng
+  - punchOutLat, punchOutLng
+  - lunchStartLat, lunchStartLng
+  - lunchEndLat, lunchEndLng
+
+
+Use Cases:
+==========
+1. Verify staff is at office location
+2. Track remote work locations
+3. Audit attendance locations
+4. Prevent time theft
+5. Compliance and reporting
+
+
+================================================================================
+                         COMPONENT HIERARCHY
+================================================================================
+
+App Root (layout.tsx)
+  |
+  +-- Login Page (/)
+  |     └── Login Form
+  |
+  +-- Admin Dashboard (/admin/staff)
+  |     ├── Header (with Logout)
+  |     ├── Create Staff Button
+  |     ├── CreateStaffForm component
+  |     └── StaffList component
+  |           └── Staff Table Rows
+  |
+  └-- Staff Dashboard (/staff/dashboard)
+        ├── Header (with Logout)
+        ├── Staff Info Display
+        ├── PunchButtons component
+        │     ├── Status Indicator
+        │     ├── Punch In Button
+        │     ├── Lunch Start/End Buttons
+        │     └── Punch Out Button
+        ├── Month Selector
+        └── AttendanceCalendar component
+              ├── Statistics Cards
+              │     ├── Total Working Days
+              │     ├── Days Present
+              │     └── Total Hours
+              └── Calendar Grid
+                    └── Day Cells (with attendance info)
+
+
+================================================================================
+                         TECHNOLOGY STACK LAYERS
+================================================================================
+
+┌─────────────────────────────────────────────────────────────┐
+│                     PRESENTATION LAYER                        │
+│  React Components + Tailwind CSS + TypeScript                │
+│  - Login Page, Admin Dashboard, Staff Dashboard              │
+│  - Responsive Design, Modern UI                              │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                    APPLICATION LAYER                          │
+│  Next.js App Router + API Routes                             │
+│  - Client-side navigation                                    │
+│  - Server-side rendering                                     │
+│  - API endpoint handlers                                     │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                     BUSINESS LOGIC LAYER                      │
+│  TypeScript Functions + Utilities                            │
+│  - Authentication (JWT, bcrypt)                              │
+│  - Authorization (role-based)                                │
+│  - Date calculations                                         │
+│  - Location handling                                         │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                    DATA ACCESS LAYER                          │
+│  Prisma ORM                                                  │
+│  - Type-safe queries                                         │
+│  - Database migrations                                       │
+│  - Relationship handling                                     │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                      DATABASE LAYER                           │
+│  MySQL 8+                                                    │
+│  - users, staff_profiles                                     │
+│  - attendance_records, lunch_breaks                          │
+│  - Indexes, constraints, relations                           │
+└─────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                    REQUEST LIFECYCLE EXAMPLE
+================================================================================
+
+User Action: Staff clicks "Punch In"
+═══════════════════════════════════════════════════════════════
+
+1. BROWSER (Client Side)
+   ┌─────────────────────────────────────────────┐
+   │ PunchButtons.tsx                            │
+   │ handlePunchIn() called                      │
+   │   ↓                                         │
+   │ getCurrentLocation()                        │
+   │   ↓                                         │
+   │ Browser Geolocation API                     │
+   │   ↓                                         │
+   │ User allows location                        │
+   │   ↓                                         │
+   │ Coordinates received                        │
+   │   ↓                                         │
+   │ fetch('/api/staff/punch-in', {             │
+   │   method: 'POST',                           │
+   │   headers: { Authorization: Bearer token }, │
+   │   body: { latitude, longitude }             │
+   │ })                                          │
+   └─────────────────────────────────────────────┘
+                     |
+                     | HTTP POST
+                     ↓
+2. SERVER (Next.js API)
+   ┌─────────────────────────────────────────────┐
+   │ /app/api/staff/punch-in/route.ts           │
+   │   ↓                                         │
+   │ Receive request                             │
+   │   ↓                                         │
+   │ requireAuth(request)                        │
+   │   ↓                                         │
+   │ Verify JWT token                            │
+   │   ↓                                         │
+   │ Extract userId from token                   │
+   │   ↓                                         │
+   │ Parse request body                          │
+   │   ↓                                         │
+   │ Validate latitude, longitude                │
+   └─────────────────────────────────────────────┘
+                     |
+                     | Prisma Query
+                     ↓
+3. DATABASE (MySQL)
+   ┌─────────────────────────────────────────────┐
+   │ Check existing attendance                    │
+   │ SELECT * FROM attendance_records             │
+   │ WHERE userId = ? AND date = TODAY            │
+   │   ↓                                         │
+   │ If not exists:                              │
+   │ INSERT INTO attendance_records               │
+   │ (userId, punchInTime, punchInLat,           │
+   │  punchInLng, date)                          │
+   │ VALUES (?, ?, ?, ?, ?)                      │
+   │   ↓                                         │
+   │ Return new record                           │
+   └─────────────────────────────────────────────┘
+                     |
+                     | Prisma Result
+                     ↓
+4. SERVER (Response)
+   ┌─────────────────────────────────────────────┐
+   │ Record created successfully                  │
+   │   ↓                                         │
+   │ Format response:                            │
+   │ {                                           │
+   │   success: true,                            │
+   │   attendance: { ... }                       │
+   │ }                                           │
+   │   ↓                                         │
+   │ Send HTTP 200 OK                            │
+   └─────────────────────────────────────────────┘
+                     |
+                     | HTTP Response
+                     ↓
+5. BROWSER (Client Side)
+   ┌─────────────────────────────────────────────┐
+   │ Response received                            │
+   │   ↓                                         │
+   │ if (response.ok)                            │
+   │   ↓                                         │
+   │ onSuccess() called                          │
+   │   ↓                                         │
+   │ fetchAttendance() - refresh data            │
+   │   ↓                                         │
+   │ Component re-renders                        │
+   │   ↓                                         │
+   │ Status updates to "Punched In"              │
+   │   ↓                                         │
+   │ Show success feedback                       │
+   └─────────────────────────────────────────────┘
+
+
+Total Time: ~1-2 seconds
+Components Involved: 7
+Database Queries: 2
+API Calls: 1
+
+
+================================================================================
+                              END OF FLOW DIAGRAM
+================================================================================
+
+For more details, see:
+  - README.md for complete documentation
+  - PROJECT_OVERVIEW.md for architecture details
+  - NEXT_STEPS.md for setup instructions
+
+================================================================================
+
