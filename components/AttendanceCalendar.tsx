@@ -88,10 +88,10 @@ export default function AttendanceCalendar({
   const firstDayOfMonth = getDay(start);
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50">
       {/* Stats */}
-      <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <div className="p-6 border-b border-white/30">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
           {format(monthDate, 'MMMM yyyy')} Attendance
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -164,7 +164,7 @@ export default function AttendanceCalendar({
           {DAYS_OF_WEEK.map((day) => (
             <div
               key={day}
-              className="text-center text-sm font-semibold text-gray-800 py-2"
+              className="text-center text-sm font-bold text-gray-800 py-2 bg-white/30 backdrop-blur-sm rounded-lg"
             >
               {day}
             </div>
@@ -196,10 +196,10 @@ export default function AttendanceCalendar({
                     : 'border-gray-200'
                 } ${
                   holiday
-                    ? 'bg-red-50'
+                    ? 'bg-red-100/40 backdrop-blur-sm'
                     : !isWorkingDay
-                    ? 'bg-gray-50'
-                    : 'bg-white'
+                    ? 'bg-gray-100/30 backdrop-blur-sm'
+                    : 'bg-white/40 backdrop-blur-sm'
                 }`}
               >
                 <div className="flex flex-col h-full">

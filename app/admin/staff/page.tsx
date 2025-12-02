@@ -109,11 +109,27 @@ export default function AdminStaffPage() {
       
       <div className="relative z-10">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-50 to-white shadow-md border-b border-gray-100">
+      <header className="bg-white/30 backdrop-blur-xl shadow-lg border-b border-white/40">
         <div className="w-[95%] mx-auto py-5 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Admin Dashboard</h1>
-            <p className="text-sm text-gray-600 mt-0.5">Manage staff members and attendance</p>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-700 via-blue-700 to-purple-700 bg-clip-text text-transparent">Admin Dashboard</h1>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-sm font-semibold text-gray-700">Manage staff members and attendance</p>
+              <span className="text-gray-400">•</span>
+              <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg px-3 py-1 shadow-sm border border-white/50">
+                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-sm font-bold text-gray-800">
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </span>
+              </div>
+            </div>
           </div>
           <div className="flex gap-3">
             <button
@@ -317,6 +333,7 @@ export default function AdminStaffPage() {
 
         <StaffList staff={staffList} onUpdate={fetchStaff} />
       </main>
+      </div>
     </div>
   );
 }

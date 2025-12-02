@@ -83,28 +83,70 @@ export default function StaffDetailPage() {
   const profile = staff.staffProfile;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-cyan-50 to-blue-50 relative overflow-hidden">
+      {/* Animated Background Pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+      </div>
+      
+      {/* Dot Pattern Overlay */}
+      <div className="absolute inset-0 opacity-20" style={{
+        backgroundImage: 'radial-gradient(circle, #0891b2 1px, transparent 1px)',
+        backgroundSize: '24px 24px'
+      }}></div>
+      
+      <div className="relative z-10">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-50 to-white shadow-md border-b border-gray-100">
+      <header className="bg-white/30 backdrop-blur-xl shadow-lg border-b border-white/40">
         <div className="w-[95%] mx-auto py-5">
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={handleBack}
-              className="group bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl border border-gray-200 hover:border-gray-300 font-semibold flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
+              className="group bg-white/60 hover:bg-white/80 backdrop-blur-sm text-gray-700 px-4 py-2 rounded-xl border border-white/50 hover:border-white/70 font-semibold flex items-center gap-2 transition-all shadow-md hover:shadow-lg"
             >
               <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Back to Staff
             </button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-lg px-3 py-1 shadow-sm border border-white/50">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-sm font-bold text-gray-800">
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('user');
+                  router.push('/');
+                }}
+                className="group bg-gradient-to-r from-red-600 to-rose-600 text-white px-5 py-2 rounded-xl hover:from-red-700 hover:to-rose-700 transition-all shadow-md hover:shadow-lg font-semibold flex items-center gap-2 hover:scale-105"
+              >
+                <svg className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Logout
+              </button>
+            </div>
           </div>
 
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-700 via-cyan-700 to-teal-700 bg-clip-text text-transparent">
                 {profile?.fullName || staff.email}
               </h1>
-              <p className="text-sm text-gray-600 mt-0.5">Staff attendance and profile details</p>
+              <p className="text-sm font-semibold text-gray-700 mt-0.5">Staff attendance and profile details</p>
             </div>
           </div>
 
@@ -414,16 +456,29 @@ export default function StaffDetailPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {record.punchOutTime ? (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                        {record.workDone?.startsWith('ON_LEAVE') ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border-2 border-purple-200 shadow-sm">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            On Leave
+                          </span>
+                        ) : record.punchOutTime ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-2 border-green-200 shadow-sm">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             Completed
                           </span>
                         ) : record.punchInTime ? (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border-2 border-yellow-200 shadow-sm">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             Active
                           </span>
                         ) : (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border-2 border-gray-200 shadow-sm">
                             Incomplete
                           </span>
                         )}
@@ -447,6 +502,13 @@ export default function StaffDetailPage() {
                         </td>
                       </tr>
                     )}
+                    
+                    {/* Separator Row */}
+                    <tr className="h-2">
+                      <td colSpan={6} className="px-6">
+                        <div className="border-b-2 border-dashed border-gray-300/50"></div>
+                      </td>
+                    </tr>
                     </React.Fragment>
                   ))
                 ) : (
@@ -464,6 +526,7 @@ export default function StaffDetailPage() {
           </div>
         </div>
       </main>
+      </div>
     </div>
   );
 }

@@ -47,10 +47,10 @@ export default function ScreenshotsViewer() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 h-full flex items-center justify-center">
+      <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-6 h-full flex items-center justify-center">
         <div className="flex items-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading screenshots...</span>
+          <span className="ml-3 text-gray-700 font-semibold">Loading screenshots...</span>
         </div>
       </div>
     );
@@ -186,9 +186,9 @@ export default function ScreenshotsViewer() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow p-6 h-full flex flex-col">
+      <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-6 h-full flex flex-col">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-bold text-gray-900">
             📸 Today's Screenshots ({screenshots.length})
           </h3>
           <button

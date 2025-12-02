@@ -366,8 +366,8 @@ export default function PunchButtons({
         />
       )}
 
-      <div className="bg-white rounded-lg shadow p-6 h-full flex flex-col">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 p-6 h-full flex flex-col">
+      <h2 className="text-xl font-bold text-gray-900 mb-4">
         Today's Attendance
       </h2>
 
@@ -390,19 +390,24 @@ export default function PunchButtons({
           </div>
         ) : (
           <>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 bg-white/60 backdrop-blur-lg px-4 py-3 rounded-xl shadow-md border border-white/40">
           <div
             className={`w-3 h-3 rounded-full ${
               status === 'not_punched_in'
                 ? 'bg-gray-400'
                 : status === 'punched_in'
-                ? 'bg-green-500'
+                ? 'bg-green-500 animate-pulse'
                 : status === 'on_lunch_break'
                 ? 'bg-yellow-500'
                 : 'bg-blue-500'
             }`}
           />
-          <span className="text-lg font-medium">
+          <span className={`text-lg font-bold ${
+            status === 'not_punched_in' ? 'text-gray-700' :
+            status === 'punched_in' ? 'text-green-700' :
+            status === 'on_lunch_break' ? 'text-yellow-700' :
+            'text-blue-700'
+          }`}>
             {status === 'not_punched_in' && 'Not Punched In'}
             {status === 'punched_in' && 'Punched In - Working'}
             {status === 'on_lunch_break' && 'On Lunch Break'}
