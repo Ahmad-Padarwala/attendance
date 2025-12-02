@@ -64,7 +64,10 @@ export async function GET(request: NextRequest) {
     let activeLunchBreak = null;
 
     if (todayRecord) {
-      if (todayRecord.punchOutTime) {
+      // Check if on leave
+      if (todayRecord.workDone?.startsWith('ON_LEAVE')) {
+        status = 'on_leave';
+      } else if (todayRecord.punchOutTime) {
         status = 'punched_out';
       } else {
         activeLunchBreak = todayRecord.lunchBreaks.find(

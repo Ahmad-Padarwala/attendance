@@ -8,6 +8,7 @@ interface AttendanceRecord {
   punchInTime: string;
   punchOutTime: string | null;
   workingHours: number | null;
+  workDone?: string | null;
   lunchBreaks: any[];
 }
 
@@ -72,7 +73,11 @@ export default function AttendanceCalendar({
   }).length;
 
   const totalPresentDays = attendanceData.filter(
-    (r) => r.punchInTime && r.punchOutTime
+    (r) => r.punchInTime && r.punchOutTime && !r.workDone?.startsWith('ON_LEAVE')
+  ).length;
+
+  const totalLeaveDays = attendanceData.filter(
+    (r) => r.workDone?.startsWith('ON_LEAVE')
   ).length;
 
   const totalHoursWorked = attendanceData.reduce(
@@ -89,24 +94,65 @@ export default function AttendanceCalendar({
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           {format(monthDate, 'MMMM yyyy')} Attendance
         </h2>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm font-medium text-gray-700">Total Working Days</p>
-            <p className="text-2xl font-bold text-blue-600">
-              {totalWorkingDays}
-            </p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Working Days */}
+          <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-4 group hover:scale-105">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-blue-100 uppercase tracking-wide mb-1">Working Days</p>
+                <p className="text-3xl font-bold text-white">{totalWorkingDays}</p>
+              </div>
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-all">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <p className="text-sm font-medium text-gray-700">Days Present</p>
-            <p className="text-2xl font-bold text-green-600">
-              {totalPresentDays}
-            </p>
+          
+          {/* Days Present */}
+          <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-4 group hover:scale-105">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-emerald-100 uppercase tracking-wide mb-1">Days Present</p>
+                <p className="text-3xl font-bold text-white">{totalPresentDays}</p>
+              </div>
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-all">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <p className="text-sm font-medium text-gray-700">Total Hours</p>
-            <p className="text-2xl font-bold text-purple-600">
-              {Number(totalHoursWorked).toFixed(2)}h
-            </p>
+          
+          {/* Days on Leave */}
+          <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-4 group hover:scale-105">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-purple-100 uppercase tracking-wide mb-1">On Leave</p>
+                <p className="text-3xl font-bold text-white">{totalLeaveDays}</p>
+              </div>
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-all">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          {/* Total Hours */}
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-4 group hover:scale-105">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-indigo-100 uppercase tracking-wide mb-1">Total Hours</p>
+                <p className="text-3xl font-bold text-white">{Number(totalHoursWorked).toFixed(2)}h</p>
+              </div>
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-all">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -172,16 +218,25 @@ export default function AttendanceCalendar({
                     </div>
                   ) : isWorkingDay && attendance ? (
                     <div className="flex-1 text-xs">
-                      {attendance.punchInTime && attendance.punchOutTime ? (
+                      {attendance.workDone?.startsWith('ON_LEAVE') ? (
+                        <>
+                          <div className="bg-purple-100 text-purple-800 rounded px-1 py-0.5 mb-1 font-medium">
+                            🟣 On Leave
+                          </div>
+                          <div className="text-gray-700 text-[10px] mt-1 line-clamp-2">
+                            {attendance.workDone.replace('ON_LEAVE: ', '')}
+                          </div>
+                        </>
+                      ) : attendance.punchInTime && attendance.punchOutTime ? (
                         <>
                           <div className="bg-green-100 text-green-800 rounded px-1 py-0.5 mb-1 font-medium">
                             ✓ Present
                           </div>
                           <div className="text-gray-800 font-medium">
-                            In: {format(new Date(attendance.punchInTime), 'HH:mm')}
+                            In: {format(new Date(attendance.punchInTime), 'hh:mm a')}
                           </div>
                           <div className="text-gray-800 font-medium">
-                            Out: {format(new Date(attendance.punchOutTime), 'HH:mm')}
+                            Out: {format(new Date(attendance.punchOutTime), 'hh:mm a')}
                           </div>
                           {attendance.workingHours && (
                             <div className="font-bold text-blue-600 mt-1">
@@ -195,7 +250,7 @@ export default function AttendanceCalendar({
                             ⏳ Active
                           </div>
                           <div className="text-gray-800 font-medium">
-                            In: {format(new Date(attendance.punchInTime), 'HH:mm')}
+                            In: {format(new Date(attendance.punchInTime), 'hh:mm a')}
                           </div>
                         </>
                       ) : null}

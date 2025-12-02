@@ -104,6 +104,7 @@ export default function AttendanceLogsList({ logs, onDelete }: AttendanceLogsLis
             {logs.map((log) => {
               const isCompleted = !!log.punchOutTime;
               const isPunchInOnly = log.punchInTime && !log.punchOutTime;
+              const isOnLeave = log.workDone?.startsWith('ON_LEAVE');
 
               return (
                 <React.Fragment key={log.id}>
@@ -165,7 +166,11 @@ export default function AttendanceLogsList({ logs, onDelete }: AttendanceLogsLis
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {isCompleted ? (
+                    {isOnLeave ? (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                        🟣 On Leave
+                      </span>
+                    ) : isCompleted ? (
                       <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
                         ✓ Completed
                       </span>
@@ -201,16 +206,18 @@ export default function AttendanceLogsList({ logs, onDelete }: AttendanceLogsLis
                   </td>
                 </tr>
                 
-                {/* Work Done Row */}
+                {/* Work Done / Leave Reason Row */}
                 {log.workDone && (
-                  <tr className="bg-blue-50">
+                  <tr className={isOnLeave ? 'bg-purple-50' : 'bg-blue-50'}>
                     <td colSpan={7} className="px-6 py-3">
                       <div className="flex items-start gap-2">
-                        <div className="text-blue-600 font-semibold text-sm mt-0.5">
-                          📝 Work Done:
+                        <div className={`font-semibold text-sm mt-0.5 ${isOnLeave ? 'text-purple-600' : 'text-blue-600'}`}>
+                          {isOnLeave ? '🟣 Leave Reason:' : '📝 Work Done:'}
                         </div>
                         <div className="text-sm text-gray-800 flex-1">
-                          {log.workDone}
+                          {isOnLeave 
+                            ? log.workDone.replace('ON_LEAVE: ', '') 
+                            : log.workDone}
                         </div>
                       </div>
                     </td>

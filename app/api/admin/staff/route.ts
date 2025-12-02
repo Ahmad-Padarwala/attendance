@@ -4,14 +4,11 @@ import { hashPassword } from '@/lib/auth';
 import { requireAdmin } from '@/middleware/auth';
 
 // Helper function to determine staff status
-async function getStaffStatus(userId: number) {
-  const today = new Date();
-  const todayDateString = today.toISOString().split('T')[0];
-
-  const todayRecord = await prisma.attendanceRecord.findFirst({
+async function getStaffStatus(userId: number, dateString: string) {
+  const record = await prisma.attendanceRecord.findFirst({
     where: {
       userId,
-      date: new Date(todayDateString),
+      date: new Date(dateString),
     },
     include: {
       lunchBreaks: true,
@@ -21,26 +18,38 @@ async function getStaffStatus(userId: number) {
   let status = 'not_punched_in';
   let punchInTime = null;
   let punchOutTime = null;
+  let workingHours = null;
 
-  if (todayRecord) {
-    punchInTime = todayRecord.punchInTime;
-    punchOutTime = todayRecord.punchOutTime;
+  if (record) {
+    punchInTime = record.punchInTime;
+    punchOutTime = record.punchOutTime;
+    workingHours = record.workingHours;
 
-    if (todayRecord.punchOutTime) {
+    // Check if on leave
+    if (record.workDone?.startsWith('ON_LEAVE')) {
+      status = 'on_leave';
+    } else if (record.punchOutTime) {
       status = 'punched_out';
     } else {
-      const activeLunchBreak = todayRecord.lunchBreaks.find(
-        (lb) => !lb.lunchEndTime
-      );
-      if (activeLunchBreak) {
-        status = 'on_lunch_break';
+      // Only check for active lunch/punch-in if it's today
+      const today = new Date().toISOString().split('T')[0];
+      if (dateString === today) {
+        const activeLunchBreak = record.lunchBreaks.find(
+          (lb) => !lb.lunchEndTime
+        );
+        if (activeLunchBreak) {
+          status = 'on_lunch_break';
+        } else {
+          status = 'punched_in';
+        }
       } else {
+        // For past dates, if there's no punch out, it's incomplete
         status = 'punched_in';
       }
     }
   }
 
-  return { status, punchInTime, punchOutTime };
+  return { status, punchInTime, punchOutTime, workingHours };
 }
 
 // GET all staff
@@ -54,6 +63,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get date parameter from query, default to today
+    const { searchParams } = new URL(request.url);
+    const dateParam = searchParams.get('date');
+    const selectedDate = dateParam || new Date().toISOString().split('T')[0];
+
     const staff = await prisma.user.findMany({
       where: { role: 'STAFF' },
       include: {
@@ -62,10 +76,10 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Get current status for each staff member
+    // Get status for each staff member for the selected date
     const staffWithStatus = await Promise.all(
       staff.map(async ({ password: _, ...user }) => {
-        const currentStatus = await getStaffStatus(user.id);
+        const currentStatus = await getStaffStatus(user.id, selectedDate);
         return {
           ...user,
           currentStatus,
@@ -79,6 +93,7 @@ export async function GET(request: NextRequest) {
       punchedIn: staffWithStatus.filter(s => s.currentStatus.status === 'punched_in').length,
       onLunch: staffWithStatus.filter(s => s.currentStatus.status === 'on_lunch_break').length,
       punchedOut: staffWithStatus.filter(s => s.currentStatus.status === 'punched_out').length,
+      onLeave: staffWithStatus.filter(s => s.currentStatus.status === 'on_leave').length,
       notPunchedIn: staffWithStatus.filter(s => s.currentStatus.status === 'not_punched_in').length,
     };
 
@@ -86,6 +101,7 @@ export async function GET(request: NextRequest) {
       success: true,
       staff: staffWithStatus,
       summary,
+      selectedDate,
     });
   } catch (error) {
     console.error('Get staff error:', error);

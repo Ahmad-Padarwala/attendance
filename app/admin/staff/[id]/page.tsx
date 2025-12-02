@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AttendanceCalendar from '@/components/AttendanceCalendar';
+import { formatTime12Hour } from '@/utils/dateUtils';
 
 export default function StaffDetailPage() {
   const router = useRouter();
@@ -84,23 +85,26 @@ export default function StaffDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4 mb-4">
+      <header className="bg-gradient-to-r from-gray-50 to-white shadow-md border-b border-gray-100">
+        <div className="w-[95%] mx-auto py-5">
+          <div className="flex items-center justify-between mb-3">
             <button
               onClick={handleBack}
-              className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2"
+              className="group bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl border border-gray-200 hover:border-gray-300 font-semibold flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
             >
-              ← Back to Staff List
+              <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Staff
             </button>
           </div>
 
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                 {profile?.fullName || staff.email}
               </h1>
-              <p className="text-sm text-gray-600">Staff Attendance Details</p>
+              <p className="text-sm text-gray-600 mt-0.5">Staff attendance and profile details</p>
             </div>
           </div>
 
@@ -120,7 +124,7 @@ export default function StaffDetailPage() {
               <div>
                 <span className="text-gray-700 font-medium">Office Hours:</span>{' '}
                 <span className="font-semibold text-gray-900">
-                  {profile.officeTimeIn} - {profile.officeTimeOut}
+                  {formatTime12Hour(profile.officeTimeIn)} - {formatTime12Hour(profile.officeTimeOut)}
                 </span>
               </div>
               <div>
@@ -135,61 +139,81 @@ export default function StaffDetailPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-[95%] mx-auto py-8">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm font-medium text-gray-700">Total Hours Worked</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">
-              {statistics?.totalHoursWorked || 0}h
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              of {statistics?.expectedTotalHours || 0}h expected
-            </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {/* Total Hours Worked */}
+          <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-5 group hover:scale-105">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-blue-100 uppercase tracking-wide mb-1">Total Hours</p>
+                <p className="text-3xl font-bold text-white">{statistics?.totalHoursWorked || 0}h</p>
+                <p className="text-xs text-blue-100 mt-1">of {statistics?.expectedTotalHours || 0}h expected</p>
+              </div>
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-all">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm font-medium text-gray-700">Expected Hours</p>
-            <p className="text-3xl font-bold text-indigo-600 mt-2">
-              {statistics?.expectedTotalHours || 0}h
-            </p>
-            <p className="text-xs text-gray-600 mt-1">Based on working days</p>
+          {/* Expected Hours */}
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-5 group hover:scale-105">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-indigo-100 uppercase tracking-wide mb-1">Expected</p>
+                <p className="text-3xl font-bold text-white">{statistics?.expectedTotalHours || 0}h</p>
+                <p className="text-xs text-indigo-100 mt-1">Based on working days</p>
+              </div>
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-all">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm font-medium text-gray-700">Days Completed</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">
-              {statistics?.completedDays || 0}
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              of {statistics?.expectedWorkingDays || 0} expected
-            </p>
+          {/* Days Completed */}
+          <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-5 group hover:scale-105">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-emerald-100 uppercase tracking-wide mb-1">Completed</p>
+                <p className="text-3xl font-bold text-white">{statistics?.completedDays || 0}</p>
+                <p className="text-xs text-emerald-100 mt-1">of {statistics?.expectedWorkingDays || 0} days</p>
+              </div>
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-all">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm font-medium text-gray-700">
-              {statistics?.totalHoursWorked >= statistics?.expectedTotalHours
-                ? 'Overtime'
-                : 'Remaining'}
+          {/* Overtime/Remaining */}
+          <div className={`bg-gradient-to-br ${
+            statistics?.totalHoursWorked >= statistics?.expectedTotalHours
+              ? 'from-purple-500 to-pink-600'
+              : 'from-amber-500 to-orange-600'
+          } rounded-xl shadow-lg hover:shadow-xl transition-all p-5 group hover:scale-105`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-white/90 uppercase tracking-wide mb-1">
+                  {statistics?.totalHoursWorked >= statistics?.expectedTotalHours ? 'Overtime' : 'Remaining'}
+                </p>
+                <p className="text-3xl font-bold text-white">
+                  {Math.abs((statistics?.totalHoursWorked || 0) - (statistics?.expectedTotalHours || 0)).toFixed(2)}h
             </p>
-            <p
-              className={`text-3xl font-bold mt-2 ${
-                statistics?.totalHoursWorked >= statistics?.expectedTotalHours
-                  ? 'text-purple-600'
-                  : 'text-orange-600'
-              }`}
-            >
-              {Math.abs(
-                (statistics?.totalHoursWorked || 0) -
-                  (statistics?.expectedTotalHours || 0)
-              ).toFixed(2)}
-              h
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              {statistics?.totalHoursWorked >= statistics?.expectedTotalHours
-                ? 'Extra hours worked'
-                : 'Hours to complete'}
-            </p>
+                <p className="text-xs text-white/90 mt-1">
+                  {statistics?.totalHoursWorked >= statistics?.expectedTotalHours ? 'Extra hours' : 'To complete'}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-all">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -283,7 +307,7 @@ export default function StaffDetailPage() {
                           {record.punchInTime
                             ? new Date(record.punchInTime).toLocaleTimeString(
                                 'en-US',
-                                { hour: '2-digit', minute: '2-digit' }
+                                { hour: '2-digit', minute: '2-digit', hour12: true }
                               )
                             : '-'}
                         </div>
@@ -320,7 +344,7 @@ export default function StaffDetailPage() {
                           {record.punchOutTime
                             ? new Date(record.punchOutTime).toLocaleTimeString(
                                 'en-US',
-                                { hour: '2-digit', minute: '2-digit' }
+                                { hour: '2-digit', minute: '2-digit', hour12: true }
                               )
                             : '-'}
                         </div>
@@ -360,13 +384,13 @@ export default function StaffDetailPage() {
                                 {lunch.lunchStartTime &&
                                   new Date(lunch.lunchStartTime).toLocaleTimeString(
                                     'en-US',
-                                    { hour: '2-digit', minute: '2-digit' }
+                                    { hour: '2-digit', minute: '2-digit', hour12: true }
                                   )}
                                 {' - '}
                                 {lunch.lunchEndTime
                                   ? new Date(lunch.lunchEndTime).toLocaleTimeString(
                                       'en-US',
-                                      { hour: '2-digit', minute: '2-digit' }
+                                      { hour: '2-digit', minute: '2-digit', hour12: true }
                                     )
                                   : 'Active'}
                                 {lunch.duration && (
@@ -406,16 +430,18 @@ export default function StaffDetailPage() {
                       </td>
                     </tr>
                     
-                    {/* Work Done Row */}
+                    {/* Work Done / Leave Reason Row */}
                     {record.workDone && (
-                      <tr className="bg-blue-50">
+                      <tr className={record.workDone.startsWith('ON_LEAVE') ? 'bg-purple-50' : 'bg-blue-50'}>
                         <td colSpan={6} className="px-6 py-3">
                           <div className="flex items-start gap-2">
-                            <div className="text-blue-600 font-semibold text-sm mt-0.5">
-                              📝 Work Done:
+                            <div className={`font-semibold text-sm mt-0.5 ${record.workDone.startsWith('ON_LEAVE') ? 'text-purple-600' : 'text-blue-600'}`}>
+                              {record.workDone.startsWith('ON_LEAVE') ? '🟣 Leave Reason:' : '📝 Work Done:'}
                             </div>
                             <div className="text-sm text-gray-800 flex-1">
-                              {record.workDone}
+                              {record.workDone.startsWith('ON_LEAVE:') 
+                                ? record.workDone.replace('ON_LEAVE: ', '') 
+                                : record.workDone}
                             </div>
                           </div>
                         </td>
