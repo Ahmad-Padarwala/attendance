@@ -4,6 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import EditStaffForm from './EditStaffForm';
 
+interface StaffStatus {
+  status: 'not_punched_in' | 'punched_in' | 'on_lunch_break' | 'punched_out';
+  punchInTime: string | null;
+  punchOutTime: string | null;
+}
+
 interface Staff {
   id: number;
   email: string;
@@ -15,12 +21,27 @@ interface Staff {
     officeTimeIn: string;
     officeTimeOut: string;
   };
+  currentStatus?: StaffStatus;
 }
 
 interface StaffListProps {
   staff: Staff[];
   onUpdate: () => void;
 }
+
+const getStatusDisplay = (status?: string) => {
+  switch (status) {
+    case 'punched_in':
+      return { label: '🟢 Working', color: 'bg-green-100 text-green-800 border-green-200' };
+    case 'on_lunch_break':
+      return { label: '🟡 On Lunch', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' };
+    case 'punched_out':
+      return { label: '🔵 Day Complete', color: 'bg-blue-100 text-blue-800 border-blue-200' };
+    case 'not_punched_in':
+    default:
+      return { label: '⚪ Not Logged In', color: 'bg-gray-100 text-gray-600 border-gray-200' };
+  }
+};
 
 export default function StaffList({ staff, onUpdate }: StaffListProps) {
   const router = useRouter();
@@ -107,6 +128,9 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
               Working Days
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+              Current Status
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
               Actions
             </th>
           </tr>
@@ -141,6 +165,23 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
                         .join(', ')
                     : 'N/A'}
                 </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {(() => {
+                  const statusDisplay = getStatusDisplay(member.currentStatus?.status);
+                  return (
+                    <div className="flex flex-col gap-1">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${statusDisplay.color}`}>
+                        {statusDisplay.label}
+                      </span>
+                      {member.currentStatus?.punchInTime && (
+                        <span className="text-xs text-gray-500">
+                          In: {new Date(member.currentStatus.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
                 <button

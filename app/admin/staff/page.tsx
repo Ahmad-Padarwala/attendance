@@ -5,10 +5,19 @@ import { useRouter } from 'next/navigation';
 import StaffList from '@/components/StaffList';
 import CreateStaffForm from '@/components/CreateStaffForm';
 
+interface StatusSummary {
+  total: number;
+  punchedIn: number;
+  onLunch: number;
+  punchedOut: number;
+  notPunchedIn: number;
+}
+
 export default function AdminStaffPage() {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [staffList, setStaffList] = useState([]);
+  const [summary, setSummary] = useState<StatusSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -44,6 +53,7 @@ export default function AdminStaffPage() {
       if (response.ok) {
         const data = await response.json();
         setStaffList(data.staff);
+        setSummary(data.summary);
       }
     } catch (error) {
       console.error('Error fetching staff:', error);
@@ -100,6 +110,71 @@ export default function AdminStaffPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Staff Status Summary */}
+        {summary && (
+          <div className="mb-8 grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">👥</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Staff</p>
+                  <p className="text-2xl font-bold text-gray-900">{summary.total}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-green-200 p-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">🟢</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-green-600">Working</p>
+                  <p className="text-2xl font-bold text-green-700">{summary.punchedIn}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-yellow-200 p-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">🍽️</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-yellow-600">On Lunch</p>
+                  <p className="text-2xl font-bold text-yellow-700">{summary.onLunch}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">✅</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-blue-600">Day Complete</p>
+                  <p className="text-2xl font-bold text-blue-700">{summary.punchedOut}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">⏳</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Not Logged In</p>
+                  <p className="text-2xl font-bold text-gray-700">{summary.notPunchedIn}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">
             Staff Members ({staffList.length})

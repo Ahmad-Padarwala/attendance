@@ -3,6 +3,46 @@ import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth';
 import { requireAdmin } from '@/middleware/auth';
 
+// Helper function to determine staff status
+async function getStaffStatus(userId: number) {
+  const today = new Date();
+  const todayDateString = today.toISOString().split('T')[0];
+
+  const todayRecord = await prisma.attendanceRecord.findFirst({
+    where: {
+      userId,
+      date: new Date(todayDateString),
+    },
+    include: {
+      lunchBreaks: true,
+    },
+  });
+
+  let status = 'not_punched_in';
+  let punchInTime = null;
+  let punchOutTime = null;
+
+  if (todayRecord) {
+    punchInTime = todayRecord.punchInTime;
+    punchOutTime = todayRecord.punchOutTime;
+
+    if (todayRecord.punchOutTime) {
+      status = 'punched_out';
+    } else {
+      const activeLunchBreak = todayRecord.lunchBreaks.find(
+        (lb) => !lb.lunchEndTime
+      );
+      if (activeLunchBreak) {
+        status = 'on_lunch_break';
+      } else {
+        status = 'punched_in';
+      }
+    }
+  }
+
+  return { status, punchInTime, punchOutTime };
+}
+
 // GET all staff
 export async function GET(request: NextRequest) {
   try {
@@ -22,12 +62,30 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Remove passwords
-    const staffWithoutPasswords = staff.map(({ password: _, ...user }) => user);
+    // Get current status for each staff member
+    const staffWithStatus = await Promise.all(
+      staff.map(async ({ password: _, ...user }) => {
+        const currentStatus = await getStaffStatus(user.id);
+        return {
+          ...user,
+          currentStatus,
+        };
+      })
+    );
+
+    // Calculate summary stats
+    const summary = {
+      total: staffWithStatus.length,
+      punchedIn: staffWithStatus.filter(s => s.currentStatus.status === 'punched_in').length,
+      onLunch: staffWithStatus.filter(s => s.currentStatus.status === 'on_lunch_break').length,
+      punchedOut: staffWithStatus.filter(s => s.currentStatus.status === 'punched_out').length,
+      notPunchedIn: staffWithStatus.filter(s => s.currentStatus.status === 'not_punched_in').length,
+    };
 
     return NextResponse.json({
       success: true,
-      staff: staffWithoutPasswords,
+      staff: staffWithStatus,
+      summary,
     });
   } catch (error) {
     console.error('Get staff error:', error);
