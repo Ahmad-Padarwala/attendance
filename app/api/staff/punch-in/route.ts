@@ -37,6 +37,15 @@ export async function POST(request: NextRequest) {
     const todayDate = getTodayDateIST(); // Get today's date in IST
     const todayDateObj = getTodayIST(); // Date object for today in IST
 
+    // Debug logging for timezone verification
+    console.log('[PUNCH-IN] Timezone Debug:', {
+      rawUTC: new Date().toISOString(),
+      calculatedIST: now.toISOString(),
+      todayDateIST: todayDate,
+      todayDateObj: todayDateObj.toISOString(),
+      displayTimeIST: now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour12: true }),
+    });
+
     // Get staff profile to check working days
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -110,9 +119,16 @@ export async function POST(request: NextRequest) {
       },
     });
     
-    console.log('Attendance record created with IST:', {
-      date: todayDateObj,
-      punchInTime: now,
+    console.log('[PUNCH-IN] Attendance record created:', {
+      id: attendance.id,
+      date: attendance.date.toISOString(),
+      punchInTime: attendance.punchInTime.toISOString(),
+      punchInTimeIST: attendance.punchInTime.toLocaleString('en-US', { 
+        timeZone: 'Asia/Kolkata', 
+        hour12: true,
+        dateStyle: 'short',
+        timeStyle: 'medium'
+      }),
       userId
     });
 

@@ -352,7 +352,7 @@ export default function StaffDetailPage() {
                           {record.punchInTime
                             ? new Date(record.punchInTime).toLocaleTimeString(
                                 'en-US',
-                                { hour: '2-digit', minute: '2-digit', hour12: true }
+                                { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }
                               )
                             : '-'}
                         </div>
@@ -389,7 +389,7 @@ export default function StaffDetailPage() {
                           {record.punchOutTime
                             ? new Date(record.punchOutTime).toLocaleTimeString(
                                 'en-US',
-                                { hour: '2-digit', minute: '2-digit', hour12: true }
+                                { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }
                               )
                             : '-'}
                         </div>
@@ -429,13 +429,13 @@ export default function StaffDetailPage() {
                                 {lunch.lunchStartTime &&
                                   new Date(lunch.lunchStartTime).toLocaleTimeString(
                                     'en-US',
-                                    { hour: '2-digit', minute: '2-digit', hour12: true }
+                                    { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }
                                   )}
                                 {' - '}
                                 {lunch.lunchEndTime
                                   ? new Date(lunch.lunchEndTime).toLocaleTimeString(
                                       'en-US',
-                                      { hour: '2-digit', minute: '2-digit', hour12: true }
+                                      { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }
                                     )
                                   : 'Active'}
                                 {lunch.duration && (

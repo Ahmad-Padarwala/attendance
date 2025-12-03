@@ -543,11 +543,11 @@ export default function PunchButtons({
                 )}
               </div>
               <div className="text-gray-600 text-xs">
-                <span className="text-gray-400">In:</span> {new Date(todayStatus.record.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                <span className="text-gray-400">In:</span> {new Date(todayStatus.record.punchInTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
             {todayStatus.record.punchOutTime && (
                   <>
                     <span className="mx-1">•</span>
-                    <span className="text-gray-400">Out:</span> {new Date(todayStatus.record.punchOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                    <span className="text-gray-400">Out:</span> {new Date(todayStatus.record.punchOutTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
                   </>
             )}
               </div>

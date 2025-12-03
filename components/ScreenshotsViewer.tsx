@@ -72,7 +72,7 @@ export default function ScreenshotsViewer() {
               </div>
               <div className="text-sm text-gray-400">
                 {selectedScreenshot.slotLabel && <>Captured at {selectedScreenshot.time} • </>}
-                {new Date(selectedScreenshot.timestamp).toLocaleDateString()}
+                {new Date(selectedScreenshot.timestamp).toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata' })}
               </div>
             </div>
             <div className="flex items-center gap-2">

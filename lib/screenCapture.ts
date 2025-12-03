@@ -159,13 +159,15 @@ async function saveScreenshot(dataUrl: string): Promise<void> {
     }
 
     const now = new Date();
-    const timeSlot = getTimeSlot(now);
+    // Convert to IST for time slot calculation
+    const nowIST = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const timeSlot = getTimeSlot(nowIST);
     
     const screenshot = {
       dataUrl,
       timestamp: now.toISOString(),
-      date: now.toISOString().split('T')[0],
-      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
+      date: now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }), // YYYY-MM-DD format in IST
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }),
       slotStart: timeSlot.slotStart,
       slotEnd: timeSlot.slotEnd,
       slotLabel: timeSlot.slotLabel,
@@ -281,7 +283,7 @@ export async function getTodayScreenshots(): Promise<any[]> {
       db = await initDB();
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD in IST
 
     return new Promise((resolve, reject) => {
       const transaction = db!.transaction([STORE_NAME], 'readonly');
@@ -311,7 +313,7 @@ export async function clearOldScreenshots(): Promise<void> {
       db = await initDB();
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD in IST
 
     return new Promise((resolve, reject) => {
       const transaction = db!.transaction([STORE_NAME], 'readwrite');

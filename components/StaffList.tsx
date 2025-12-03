@@ -376,7 +376,7 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       <span className="text-sm font-medium text-gray-900">
-                        {new Date(member.currentStatus.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        {new Date(member.currentStatus.punchInTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
                       </span>
                     </div>
                   ) : (
@@ -388,7 +388,7 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                       <span className="text-sm font-medium text-gray-900">
-                        {new Date(member.currentStatus.punchOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        {new Date(member.currentStatus.punchOutTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
                       </span>
                 </div>
                   ) : (
