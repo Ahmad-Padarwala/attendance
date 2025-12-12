@@ -39,6 +39,7 @@ export default function StaffTicketDetailPage() {
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   useEffect(() => {
     // Check authentication
@@ -50,6 +51,8 @@ export default function StaffTicketDetailPage() {
       return;
     }
 
+    const parsedUser = JSON.parse(userData);
+    setCurrentUserId(parsedUser.id);
     fetchTicket();
   }, [router, ticketId]);
 
@@ -133,6 +136,29 @@ export default function StaffTicketDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this ticket?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/staff/tickets/${ticketId}/delete`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        router.push('/staff/tickets');
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to delete ticket');
+      }
+    } catch (error) {
+      alert('Error deleting ticket');
+    }
+  };
+
   if (loading || !ticket) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -144,16 +170,30 @@ export default function StaffTicketDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
       <div className="w-[95%] mx-auto py-8">
-        {/* Back Button */}
-        <button
-          onClick={() => router.push('/staff/tickets')}
-          className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-800 font-semibold transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to My Tickets
-        </button>
+        {/* Back Button and Actions */}
+        <div className="mb-6 flex items-center justify-between">
+          <button
+            onClick={() => router.push('/staff/tickets')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 font-semibold transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to My Tickets
+          </button>
+
+          {ticket.createdBy.id === currentUserId && (
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-semibold text-sm flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete Ticket
+            </button>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}

@@ -40,6 +40,7 @@ export default function AdminTicketDetailPage() {
   const [staffList, setStaffList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({
     status: '',
     priority: '',
@@ -63,6 +64,7 @@ export default function AdminTicketDetailPage() {
       return;
     }
 
+    setCurrentUserId(parsedUser.id);
     fetchTicket();
     fetchStaff();
   }, [router, ticketId]);
@@ -155,9 +157,12 @@ export default function AdminTicketDetailPage() {
 
       if (response.ok) {
         router.push('/admin/tickets');
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to delete ticket');
       }
     } catch (error) {
-      console.error('Error deleting ticket:', error);
+      alert('Error deleting ticket');
     }
   };
 
@@ -237,12 +242,14 @@ export default function AdminTicketDetailPage() {
                   >
                     {editing ? 'Cancel' : 'Edit'}
                   </button>
-                  <button
-                    onClick={handleDelete}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-semibold text-sm"
-                  >
-                    Delete
-                  </button>
+                  {ticket.createdBy.id === currentUserId && (
+                    <button
+                      onClick={handleDelete}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-semibold text-sm"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
 
