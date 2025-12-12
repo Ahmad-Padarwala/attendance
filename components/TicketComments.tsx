@@ -130,7 +130,7 @@ export default function TicketComments({ ticketId, comments, onCommentAdded, isA
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
                       comment.user.role === 'ADMIN' ? 'bg-gradient-to-br from-purple-500 to-pink-500' : 'bg-gradient-to-br from-blue-500 to-indigo-500'
                     }`}>
-                      {(comment.user.staffProfile?.fullName || comment.user.email).charAt(0).toUpperCase()}
+                      {(comment.user.staffProfile?.fullName || (comment.user.role === 'ADMIN' ? 'Admin' : 'User')).charAt(0).toUpperCase()}
                     </div>
                   </div>
 
@@ -138,7 +138,7 @@ export default function TicketComments({ ticketId, comments, onCommentAdded, isA
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-semibold text-gray-800">
-                        {comment.user.staffProfile?.fullName || comment.user.email}
+                        {comment.user.staffProfile?.fullName || (comment.user.role === 'ADMIN' ? 'Admin' : 'User')}
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                         comment.user.role === 'ADMIN' 
