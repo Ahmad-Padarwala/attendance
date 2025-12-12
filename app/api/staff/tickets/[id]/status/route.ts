@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth';
 // PUT update ticket status (staff can update their own tickets)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -18,7 +18,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
     
     // Verify ticket exists and staff has access
     const ticket = await prisma.ticket.findUnique({

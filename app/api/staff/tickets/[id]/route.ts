@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth';
 // GET single ticket details (staff can only view their assigned tickets)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -18,7 +18,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {

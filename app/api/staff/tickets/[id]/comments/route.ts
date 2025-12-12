@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth';
 // POST add comment to ticket (staff can comment on their assigned tickets)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -18,7 +18,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
     
     // Verify ticket exists and staff has access
     const ticket = await prisma.ticket.findUnique({

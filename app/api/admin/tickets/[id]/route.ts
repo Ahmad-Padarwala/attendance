@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth';
 // GET single ticket details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -18,7 +18,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {
@@ -64,7 +65,7 @@ export async function GET(
 // PUT update ticket
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -77,7 +78,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
     const body = await request.json();
     const { title, description, status, priority, assignedToId, dueDate } = body;
 
@@ -135,7 +137,7 @@ export async function PUT(
 // DELETE ticket
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -148,7 +150,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
     await prisma.ticket.delete({
       where: { id: ticketId },
     });
