@@ -13,14 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { latitude, longitude } = await request.json();
-
-    if (!latitude || !longitude) {
-      return NextResponse.json(
-        { error: 'Location is required' },
-        { status: 400 }
-      );
-    }
+    // Location is no longer required
 
     const userId = authResult.user.userId;
     const now = getNowIST(); // Use IST time
@@ -63,8 +56,6 @@ export async function POST(request: NextRequest) {
         userId,
         attendanceRecordId: attendance.id,
         lunchStartTime: now,
-        lunchStartLat: latitude,
-        lunchStartLng: longitude,
       },
     });
 

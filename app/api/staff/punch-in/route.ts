@@ -23,14 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { latitude, longitude } = await request.json();
-
-    if (!latitude || !longitude) {
-      return NextResponse.json(
-        { error: 'Location is required' },
-        { status: 400 }
-      );
-    }
+    // Location is no longer required
 
     const userId = authResult.user.userId;
     const now = getNowIST(); // Use IST time
@@ -65,8 +58,8 @@ export async function POST(request: NextRequest) {
 
     if (!workingDays.includes(todayDayName)) {
       return NextResponse.json(
-        { 
-          error: `Today is ${todayDayName}. You can only punch in on your working days: ${workingDays.join(', ')}` 
+        {
+          error: `Today is ${todayDayName}. You can only punch in on your working days: ${workingDays.join(', ')}`
         },
         { status: 400 }
       );
@@ -79,8 +72,8 @@ export async function POST(request: NextRequest) {
 
     if (holiday) {
       return NextResponse.json(
-        { 
-          error: `Today is a holiday: ${holiday.name}. No attendance required.` 
+        {
+          error: `Today is a holiday: ${holiday.name}. No attendance required.`
         },
         { status: 400 }
       );
@@ -113,18 +106,16 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         punchInTime: now,
-        punchInLat: latitude,
-        punchInLng: longitude,
         date: todayDateObj,
       },
     });
-    
+
     console.log('[PUNCH-IN] Attendance record created:', {
       id: attendance.id,
       date: attendance.date.toISOString(),
       punchInTime: attendance.punchInTime.toISOString(),
-      punchInTimeIST: attendance.punchInTime.toLocaleString('en-US', { 
-        timeZone: 'Asia/Kolkata', 
+      punchInTimeIST: attendance.punchInTime.toLocaleString('en-US', {
+        timeZone: 'Asia/Kolkata',
         hour12: true,
         dateStyle: 'short',
         timeStyle: 'medium'

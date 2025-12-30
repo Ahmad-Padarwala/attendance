@@ -13,14 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { latitude, longitude, workDone } = await request.json();
-
-    if (!latitude || !longitude) {
-      return NextResponse.json(
-        { error: 'Location is required' },
-        { status: 400 }
-      );
-    }
+    const { workDone } = await request.json();
 
     if (!workDone || workDone.trim().length < 10) {
       return NextResponse.json(
@@ -81,8 +74,6 @@ export async function POST(request: NextRequest) {
       where: { id: attendance.id },
       data: {
         punchOutTime: now,
-        punchOutLat: latitude,
-        punchOutLng: longitude,
         workingHours,
         workDone: workDone.trim(),
       },

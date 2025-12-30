@@ -109,7 +109,7 @@ export default function AttendanceCalendar({
               </div>
             </div>
           </div>
-          
+
           {/* Days Present */}
           <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-4 group hover:scale-105">
             <div className="flex items-center justify-between">
@@ -124,7 +124,7 @@ export default function AttendanceCalendar({
               </div>
             </div>
           </div>
-          
+
           {/* Days on Leave */}
           <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-4 group hover:scale-105">
             <div className="flex items-center justify-between">
@@ -139,7 +139,7 @@ export default function AttendanceCalendar({
               </div>
             </div>
           </div>
-          
+
           {/* Total Hours */}
           <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all p-4 group hover:scale-105">
             <div className="flex items-center justify-between">
@@ -190,17 +190,15 @@ export default function AttendanceCalendar({
             return (
               <div
                 key={dateKey}
-                className={`aspect-square border rounded-lg p-2 ${
-                  isToday
+                className={`aspect-square border rounded-lg p-2 ${isToday
                     ? 'border-blue-500 border-2'
                     : 'border-gray-200'
-                } ${
-                  holiday
+                  } ${holiday
                     ? 'bg-red-100/40 backdrop-blur-sm'
                     : !isWorkingDay
-                    ? 'bg-gray-100/30 backdrop-blur-sm'
-                    : 'bg-white/40 backdrop-blur-sm'
-                }`}
+                      ? 'bg-gray-100/30 backdrop-blur-sm'
+                      : 'bg-white/40 backdrop-blur-sm'
+                  }`}
               >
                 <div className="flex flex-col h-full">
                   <div className="text-sm font-semibold text-gray-900 mb-1">

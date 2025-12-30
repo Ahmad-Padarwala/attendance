@@ -19,7 +19,7 @@ export default function ScreenshotsViewer() {
   const [loading, setLoading] = useState(true);
   const [selectedScreenshot, setSelectedScreenshot] = useState<Screenshot | null>(null);
   const [showAllModal, setShowAllModal] = useState(false);
-  
+
   const VISIBLE_COUNT = 4; // Show only 4 recent screenshots
 
   useEffect(() => {
@@ -31,10 +31,10 @@ export default function ScreenshotsViewer() {
     try {
       // Clear old screenshots from previous days first
       await clearOldScreenshots();
-      
+
       const data = await getTodayScreenshots();
       // Sort by timestamp descending (newest first)
-      const sorted = data.sort((a: Screenshot, b: Screenshot) => 
+      const sorted = data.sort((a: Screenshot, b: Screenshot) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
       setScreenshots(sorted);
@@ -60,7 +60,7 @@ export default function ScreenshotsViewer() {
     <>
       {/* Full screen modal for selected screenshot */}
       {selectedScreenshot && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/95 z-50 flex flex-col"
           onClick={() => setSelectedScreenshot(null)}
         >
@@ -107,7 +107,7 @@ export default function ScreenshotsViewer() {
           </div>
 
           {/* Image container - Scrollable */}
-          <div 
+          <div
             className="flex-1 flex items-center justify-center p-4 overflow-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -123,11 +123,11 @@ export default function ScreenshotsViewer() {
 
       {/* View All Screenshots Modal */}
       {showAllModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
           onClick={() => setShowAllModal(false)}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -231,7 +231,7 @@ export default function ScreenshotsViewer() {
                 </div>
               ))}
             </div>
-            
+
             {/* View All Button */}
             {screenshots.length > VISIBLE_COUNT && (
               <button
