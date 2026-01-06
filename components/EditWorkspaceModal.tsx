@@ -111,7 +111,7 @@ export default function EditWorkspaceModal({ isOpen, onClose, onSuccess, workspa
                             maxLength={200}
                             required
                             placeholder="e.g., Project Documentation"
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         />
                         <p className="text-xs text-gray-500 mt-1">{title.length}/200 characters</p>
                     </div>
@@ -142,7 +142,7 @@ export default function EditWorkspaceModal({ isOpen, onClose, onSuccess, workspa
                             required
                             rows={4}
                             placeholder="Brief description of this workspace item..."
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
                         />
                         <p className="text-xs text-gray-500 mt-1">{description.length} characters</p>
                     </div>
