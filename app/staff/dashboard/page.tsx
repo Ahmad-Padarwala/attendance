@@ -169,6 +169,15 @@ export default function StaffDashboardPage() {
               </div>
               <div className="flex gap-3">
                 <button
+                  onClick={() => router.push('/staff/workspace')}
+                  className="group bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2.5 rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all shadow-md hover:shadow-lg font-semibold flex items-center gap-2 hover:scale-105"
+                >
+                  <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
+                  </svg>
+                  My Workspace
+                </button>
+                <button
                   onClick={() => router.push('/staff/tickets')}
                   className="group bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-2.5 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg font-semibold flex items-center gap-2 hover:scale-105"
                 >
@@ -223,8 +232,8 @@ export default function StaffDashboardPage() {
         <main className="w-[95%] mx-auto py-8">
           {/* Today's Attendance & Screenshots - Side by Side */}
           <div className={`mb-8 grid gap-6 ${(todayStatus?.status === 'punched_in' || todayStatus?.status === 'on_lunch_break' || todayStatus?.status === 'punched_out')
-              ? 'lg:grid-cols-2 items-stretch'
-              : 'grid-cols-1'
+            ? 'lg:grid-cols-2 items-stretch'
+            : 'grid-cols-1'
             }`}>
             {/* Punch Buttons */}
             <div className="h-full">
