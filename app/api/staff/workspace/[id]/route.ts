@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 // PUT - Update a workspace
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const token = req.headers.get('authorization')?.replace('Bearer ', '');
@@ -23,7 +23,8 @@ export async function PUT(
             return NextResponse.json({ error: 'Access denied' }, { status: 403 });
         }
 
-        const workspaceId = parseInt(params.id);
+        const { id } = await params;
+        const workspaceId = parseInt(id);
 
         if (isNaN(workspaceId)) {
             return NextResponse.json({ error: 'Invalid workspace ID' }, { status: 400 });
@@ -79,7 +80,7 @@ export async function PUT(
 // DELETE - Delete a workspace
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const token = req.headers.get('authorization')?.replace('Bearer ', '');
@@ -94,7 +95,8 @@ export async function DELETE(
             return NextResponse.json({ error: 'Access denied' }, { status: 403 });
         }
 
-        const workspaceId = parseInt(params.id);
+        const { id } = await params;
+        const workspaceId = parseInt(id);
 
         if (isNaN(workspaceId)) {
             return NextResponse.json({ error: 'Invalid workspace ID' }, { status: 400 });
