@@ -19,11 +19,44 @@ async function getStaffStatus(userId: number, dateString: string) {
   let punchInTime = null;
   let punchOutTime = null;
   let workingHours = null;
+  let lunchBreaks: any[] = [];
+  let totalLunchMinutes = 0;
+  let netWorkingHours = null;
 
   if (record) {
     punchInTime = record.punchInTime;
     punchOutTime = record.punchOutTime;
     workingHours = record.workingHours;
+
+    // Process lunch breaks
+    lunchBreaks = record.lunchBreaks.map((lb) => {
+      let duration = lb.duration;
+
+      // Calculate duration if not stored and lunch ended
+      if (!duration && lb.lunchEndTime) {
+        const start = new Date(lb.lunchStartTime).getTime();
+        const end = new Date(lb.lunchEndTime).getTime();
+        duration = Math.round((end - start) / (1000 * 60)); // minutes
+      }
+
+      if (duration) {
+        totalLunchMinutes += duration;
+      }
+
+      return {
+        lunchStartTime: lb.lunchStartTime,
+        lunchEndTime: lb.lunchEndTime,
+        duration: duration,
+      };
+    });
+
+    // Calculate net working hours (excluding lunch time)
+    if (workingHours !== null && totalLunchMinutes > 0) {
+      const lunchHours = totalLunchMinutes / 60;
+      netWorkingHours = Math.max(0, Number(workingHours) - lunchHours);
+    } else if (workingHours !== null) {
+      netWorkingHours = Number(workingHours);
+    }
 
     // Check if on leave
     if (record.workDone?.startsWith('ON_LEAVE')) {
@@ -49,7 +82,15 @@ async function getStaffStatus(userId: number, dateString: string) {
     }
   }
 
-  return { status, punchInTime, punchOutTime, workingHours };
+  return {
+    status,
+    punchInTime,
+    punchOutTime,
+    workingHours,
+    lunchBreaks,
+    totalLunchMinutes,
+    netWorkingHours
+  };
 }
 
 // GET all staff

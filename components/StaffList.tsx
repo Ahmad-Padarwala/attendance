@@ -5,11 +5,20 @@ import { useRouter } from 'next/navigation';
 import EditStaffForm from './EditStaffForm';
 import { formatTime12Hour } from '@/utils/dateUtils';
 
+interface LunchBreak {
+  lunchStartTime: string;
+  lunchEndTime: string | null;
+  duration: number | null;
+}
+
 interface StaffStatus {
   status: 'not_punched_in' | 'punched_in' | 'on_lunch_break' | 'punched_out' | 'on_leave';
   punchInTime: string | null;
   punchOutTime: string | null;
   workingHours: number | null;
+  lunchBreaks: LunchBreak[];
+  totalLunchMinutes: number;
+  netWorkingHours: number | null;
 }
 
 interface Staff {
@@ -203,21 +212,21 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
         {/* Status Filter */}
         <div className="relative group">
           <div className={`absolute inset-0 rounded-xl opacity-20 group-hover:opacity-30 transition-opacity ${statusFilter === 'punched_in' ? 'bg-gradient-to-r from-green-400 to-emerald-500' :
-              statusFilter === 'on_lunch_break' ? 'bg-gradient-to-r from-yellow-400 to-orange-500' :
-                statusFilter === 'punched_out' ? 'bg-gradient-to-r from-blue-400 to-cyan-500' :
-                  statusFilter === 'on_leave' ? 'bg-gradient-to-r from-purple-400 to-pink-500' :
-                    statusFilter === 'not_punched_in' ? 'bg-gradient-to-r from-gray-400 to-slate-500' :
-                      'bg-gradient-to-r from-indigo-400 to-blue-500'
+            statusFilter === 'on_lunch_break' ? 'bg-gradient-to-r from-yellow-400 to-orange-500' :
+              statusFilter === 'punched_out' ? 'bg-gradient-to-r from-blue-400 to-cyan-500' :
+                statusFilter === 'on_leave' ? 'bg-gradient-to-r from-purple-400 to-pink-500' :
+                  statusFilter === 'not_punched_in' ? 'bg-gradient-to-r from-gray-400 to-slate-500' :
+                    'bg-gradient-to-r from-indigo-400 to-blue-500'
             }`}></div>
 
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
               <div className={`flex items-center ${statusFilter === 'punched_in' ? 'text-green-600' :
-                  statusFilter === 'on_lunch_break' ? 'text-yellow-600' :
-                    statusFilter === 'punched_out' ? 'text-blue-600' :
-                      statusFilter === 'on_leave' ? 'text-purple-600' :
-                        statusFilter === 'not_punched_in' ? 'text-gray-600' :
-                          'text-indigo-600'
+                statusFilter === 'on_lunch_break' ? 'text-yellow-600' :
+                  statusFilter === 'punched_out' ? 'text-blue-600' :
+                    statusFilter === 'on_leave' ? 'text-purple-600' :
+                      statusFilter === 'not_punched_in' ? 'text-gray-600' :
+                        'text-indigo-600'
                 }`}>
                 {statusFilter === 'punched_in' && (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -256,11 +265,11 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className={`relative appearance-none w-full sm:w-64 pl-12 pr-10 py-3 bg-white/90 backdrop-blur-sm border-2 rounded-xl font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all shadow-md hover:shadow-lg cursor-pointer ${statusFilter === 'punched_in' ? 'border-green-300 focus:ring-green-500 text-green-700' :
-                  statusFilter === 'on_lunch_break' ? 'border-yellow-300 focus:ring-yellow-500 text-yellow-700' :
-                    statusFilter === 'punched_out' ? 'border-blue-300 focus:ring-blue-500 text-blue-700' :
-                      statusFilter === 'on_leave' ? 'border-purple-300 focus:ring-purple-500 text-purple-700' :
-                        statusFilter === 'not_punched_in' ? 'border-gray-300 focus:ring-gray-500 text-gray-700' :
-                          'border-indigo-300 focus:ring-indigo-500 text-indigo-700'
+                statusFilter === 'on_lunch_break' ? 'border-yellow-300 focus:ring-yellow-500 text-yellow-700' :
+                  statusFilter === 'punched_out' ? 'border-blue-300 focus:ring-blue-500 text-blue-700' :
+                    statusFilter === 'on_leave' ? 'border-purple-300 focus:ring-purple-500 text-purple-700' :
+                      statusFilter === 'not_punched_in' ? 'border-gray-300 focus:ring-gray-500 text-gray-700' :
+                        'border-indigo-300 focus:ring-indigo-500 text-indigo-700'
                 }`}
             >
               {STATUS_OPTIONS.map((option) => (
@@ -272,11 +281,11 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
 
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <svg className={`w-5 h-5 transition-colors ${statusFilter === 'punched_in' ? 'text-green-500' :
-                  statusFilter === 'on_lunch_break' ? 'text-yellow-500' :
-                    statusFilter === 'punched_out' ? 'text-blue-500' :
-                      statusFilter === 'on_leave' ? 'text-purple-500' :
-                        statusFilter === 'not_punched_in' ? 'text-gray-500' :
-                          'text-indigo-500'
+                statusFilter === 'on_lunch_break' ? 'text-yellow-500' :
+                  statusFilter === 'punched_out' ? 'text-blue-500' :
+                    statusFilter === 'on_leave' ? 'text-purple-500' :
+                      statusFilter === 'not_punched_in' ? 'text-gray-500' :
+                        'text-indigo-500'
                 }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -327,7 +336,12 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                 <div className="flex items-center gap-1">
-                  <span className="text-blue-600">⏱️</span> Total Hours
+                  <span className="text-orange-600">🍽️</span> Lunch Time
+                </div>
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <div className="flex items-center gap-1">
+                  <span className="text-blue-600">⏱️</span> Working Hours (Net)
                 </div>
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
@@ -344,7 +358,7 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredStaff.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                   No staff found matching "{searchQuery}"
                 </td>
               </tr>
@@ -392,11 +406,38 @@ export default function StaffList({ staff, onUpdate }: StaffListProps) {
                     )}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    {member.currentStatus?.workingHours !== null && member.currentStatus?.workingHours !== undefined ? (
-                      <div className="flex items-center gap-1">
+                    {member.currentStatus?.lunchBreaks && member.currentStatus.lunchBreaks.length > 0 ? (
+                      <div className="flex flex-col gap-1">
+                        {member.currentStatus.lunchBreaks.map((lunch, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            <span className="text-sm font-medium text-gray-900">
+                              {new Date(lunch.lunchStartTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })}
+                              {' - '}
+                              {lunch.lunchEndTime ? (
+                                new Date(lunch.lunchEndTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })
+                              ) : (
+                                <span className="text-orange-600 font-semibold">Active</span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    {member.currentStatus?.netWorkingHours !== null && member.currentStatus?.netWorkingHours !== undefined ? (
+                      <div className="flex flex-col gap-0.5">
                         <span className="text-sm font-bold text-blue-600">
-                          {Number(member.currentStatus.workingHours).toFixed(2)}h
+                          {Number(member.currentStatus.netWorkingHours).toFixed(2)}h
                         </span>
+                        {member.currentStatus.totalLunchMinutes > 0 && (
+                          <span className="text-xs text-gray-500">
+                            (Lunch: {member.currentStatus.totalLunchMinutes}m)
+                          </span>
+                        )}
                       </div>
                     ) : (
                       <span className="text-sm text-gray-400">—</span>
