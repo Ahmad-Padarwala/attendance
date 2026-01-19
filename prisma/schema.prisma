@@ -24,6 +24,8 @@ model User {
   createdTickets     Ticket[]        @relation("CreatedTickets")
   ticketComments     TicketComment[]
   workspaces         Workspace[]
+  cabinCallsAsStaff  CabinCall[]     @relation("StaffCalls")
+  cabinCallsAsAdmin  CabinCall[]     @relation("AdminCalls")
 
   @@map("users")
 }
@@ -178,5 +180,28 @@ model Workspace {
 
   @@index([userId])
   @@map("workspaces")
+}
+
+model CabinCall {
+  id             Int       @id @default(autoincrement())
+  staffId        Int
+  adminId        Int
+  message        String?   @db.Text
+  status         CallStatus @default(PENDING)
+  createdAt      DateTime  @default(now())
+  acknowledgedAt DateTime?
+
+  // Relations
+  staff User @relation("StaffCalls", fields: [staffId], references: [id], onDelete: Cascade)
+  admin User @relation("AdminCalls", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, status])
+  @@map("cabin_calls")
+}
+
+enum CallStatus {
+  PENDING
+  ACKNOWLEDGED
+  DISMISSED
 }
 

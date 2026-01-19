@@ -7,6 +7,7 @@ import PunchButtons from '@/components/PunchButtons';
 import AttendanceLogsList from '@/components/AttendanceLogsList';
 import ScreenshotsViewer from '@/components/ScreenshotsViewer';
 import MotivationalQuoteModal from '@/components/MotivationalQuoteModal';
+import CabinCallNotification from '@/components/CabinCallNotification';
 import { formatTime12Hour } from '@/utils/dateUtils';
 import { getNowIST } from '@/utils/timezone';
 
@@ -125,6 +126,9 @@ export default function StaffDashboardPage() {
         isOpen={showQuoteModal}
         onClose={() => setShowQuoteModal(false)}
       />
+
+      {/* Cabin Call Notification */}
+      <CabinCallNotification />
 
       {/* Animated Background Pattern */}
       <div className="absolute inset-0 opacity-30">
