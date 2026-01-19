@@ -50,13 +50,9 @@ async function getStaffStatus(userId: number, dateString: string) {
       };
     });
 
-    // Calculate net working hours (excluding lunch time)
-    if (workingHours !== null && totalLunchMinutes > 0) {
-      const lunchHours = totalLunchMinutes / 60;
-      netWorkingHours = Math.max(0, Number(workingHours) - lunchHours);
-    } else if (workingHours !== null) {
-      netWorkingHours = Number(workingHours);
-    }
+    // workingHours already has lunch time subtracted during punch-out
+    // So we use it directly as netWorkingHours
+    netWorkingHours = workingHours !== null ? Number(workingHours) : null;
 
     // Check if on leave
     if (record.workDone?.startsWith('ON_LEAVE')) {
