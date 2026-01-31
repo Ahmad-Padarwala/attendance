@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import StoryPointsInput from './StoryPointsInput';
 
 interface Staff {
   id: number;
@@ -10,31 +11,55 @@ interface Staff {
   };
 }
 
+interface Ticket {
+  id: number;
+  ticketNumber: string;
+  title: string;
+  ticketType: string;
+}
+
+interface Project {
+  id: number;
+  name: string;
+  color: string;
+}
+
 interface CreateTicketModalProps {
   onClose: () => void;
   onSuccess: () => void;
+  parentTicket?: Ticket | null;
+  defaultParentId?: number;
+  selectedProjectId?: number | null;
 }
 
-export default function CreateTicketModal({ onClose, onSuccess }: CreateTicketModalProps) {
+export default function CreateTicketModal({ onClose, onSuccess, parentTicket = null, defaultParentId, selectedProjectId = null }: CreateTicketModalProps) {
   const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [parentTickets, setParentTickets] = useState<Ticket[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     assignedToId: '',
     priority: 'MEDIUM',
+    ticketType: 'STORY',
+    storyPoints: null as number | null,
     dueDate: '',
+    parentId: defaultParentId?.toString() || parentTicket?.id.toString() || '',
+    projectId: selectedProjectId?.toString() || '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetchStaff();
+    fetchParentTickets();
+    fetchProjects();
   }, []);
 
   const fetchStaff = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/staff', {
+      const response = await fetch('/api/staff/all-staff', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -49,6 +74,43 @@ export default function CreateTicketModal({ onClose, onSuccess }: CreateTicketMo
     }
   };
 
+  const fetchParentTickets = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/tickets', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Only show tickets that can be parents (not subtasks themselves)
+        setParentTickets(data.tickets.filter((t: any) => !t.parentId));
+      }
+    } catch (error) {
+      console.error('Error fetching parent tickets:', error);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/projects', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -56,7 +118,7 @@ export default function CreateTicketModal({ onClose, onSuccess }: CreateTicketMo
 
     try {
       const token = localStorage.getItem('token');
-      
+
       // Validate dueDate
       if (!formData.dueDate) {
         setError('Please select a due date');
@@ -68,8 +130,11 @@ export default function CreateTicketModal({ onClose, onSuccess }: CreateTicketMo
         title: formData.title,
         description: formData.description,
         priority: formData.priority,
+        ticketType: formData.ticketType,
+        storyPoints: formData.storyPoints,
         dueDate: formData.dueDate,
         assignedToId: formData.assignedToId || null,
+        parentId: formData.parentId || null,
       };
 
       console.log('Sending ticket data:', payload);
@@ -157,6 +222,75 @@ export default function CreateTicketModal({ onClose, onSuccess }: CreateTicketMo
               required
             />
           </div>
+
+          {/* Ticket Type */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Ticket Type
+            </label>
+            <select
+              value={formData.ticketType}
+              onChange={(e) => setFormData({ ...formData, ticketType: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all text-gray-900"
+            >
+              <option value="EPIC">🎯 Epic</option>
+              <option value="STORY">📖 Story</option>
+              <option value="IMPROVEMENT">⚡ Improvement</option>
+              <option value="BUG">🐛 Bug</option>
+            </select>
+          </div>
+
+          {/* Project */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Project (Optional)
+            </label>
+            <select
+              value={formData.projectId}
+              onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all text-gray-900"
+            >
+              <option value="">No Project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Parent Ticket (for subtasks) */}
+          {!parentTicket && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Parent Ticket (Optional)
+                <span className="text-gray-500 font-normal ml-2 text-xs">Create as subtask</span>
+              </label>
+              <select
+                value={formData.parentId}
+                onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all text-gray-900"
+              >
+                <option value="">-- No Parent (Standalone Ticket) --</option>
+                {parentTickets.map((ticket) => (
+                  <option key={ticket.id} value={ticket.id}>
+                    {ticket.ticketNumber} - {ticket.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Story Points */}
+          <StoryPointsInput
+            value={formData.storyPoints}
+            onChange={(points) => setFormData({ ...formData, storyPoints: points })}
+            onDueDateSuggestion={(date) => {
+              if (!formData.dueDate) {
+                setFormData({ ...formData, dueDate: date.toISOString().split('T')[0] });
+              }
+            }}
+          />
 
           {/* Assign To */}
           <div>

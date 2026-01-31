@@ -23,6 +23,105 @@ export async function GET(
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {
+        project: true, // Include project details
+        assignedTo: {
+          include: {
+            staffProfile: true,
+          },
+        },
+        createdBy: {
+          include: {
+            staffProfile: true,
+          },
+        },
+        parent: {
+          select: {
+            id: true,
+            ticketNumber: true,
+            title: true,
+            ticketType: true,
+          },
+        },
+        subtasks: {
+          include: {
+            assignedTo: {
+              include: {
+                staffProfile: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+        comments: {
+          include: {
+            user: {
+              include: {
+                staffProfile: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!ticket) {
+      return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+    }
+
+    // Tickets are now public to all authenticated users
+    // No need to check if staff is assigned or creator
+
+    return NextResponse.json({ ticket });
+  } catch (error) {
+    console.error('Error fetching ticket:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch ticket' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT update ticket (staff)
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const token = request.headers.get('authorization')?.split(' ')[1];
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const ticketId = parseInt(id);
+    const body = await request.json();
+    const { projectId } = body;
+
+    const updateData: any = {};
+    if (projectId !== undefined) {
+      updateData.projectId = projectId ? parseInt(projectId) : null;
+    }
+
+    // Ensure we are only updating if data is present
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ message: 'No changes provided' });
+    }
+
+    const ticket = await prisma.ticket.update({
+      where: { id: ticketId },
+      data: updateData,
+      include: {
+        project: true,
         assignedTo: {
           include: {
             staffProfile: true,
@@ -48,22 +147,11 @@ export async function GET(
       },
     });
 
-    if (!ticket) {
-      return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
-    }
-
-    // Staff can view tickets assigned to them OR created by them
-    if (decoded.role === 'STAFF' && 
-        ticket.assignedToId !== decoded.userId && 
-        ticket.createdById !== decoded.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
-
     return NextResponse.json({ ticket });
   } catch (error) {
-    console.error('Error fetching ticket:', error);
+    console.error('Error updating ticket:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch ticket' },
+      { error: 'Failed to update ticket' },
       { status: 500 }
     );
   }

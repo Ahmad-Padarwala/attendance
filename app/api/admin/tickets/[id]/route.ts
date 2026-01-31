@@ -23,6 +23,7 @@ export async function GET(
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {
+        project: true, // Include project details
         assignedTo: {
           include: {
             staffProfile: true,
@@ -31,6 +32,26 @@ export async function GET(
         createdBy: {
           include: {
             staffProfile: true,
+          },
+        },
+        parent: {
+          select: {
+            id: true,
+            ticketNumber: true,
+            title: true,
+            ticketType: true,
+          },
+        },
+        subtasks: {
+          include: {
+            assignedTo: {
+              include: {
+                staffProfile: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'asc',
           },
         },
         comments: {
@@ -81,7 +102,7 @@ export async function PUT(
     const { id } = await params;
     const ticketId = parseInt(id);
     const body = await request.json();
-    const { title, description, status, priority, assignedToId, dueDate } = body;
+    const { title, description, status, priority, assignedToId, dueDate, projectId } = body;
 
     const updateData: any = {};
     if (title) updateData.title = title;
@@ -91,6 +112,9 @@ export async function PUT(
     if (assignedToId !== undefined) {
       updateData.assignedToId = assignedToId ? parseInt(assignedToId) : null;
     }
+    if (projectId !== undefined) {
+      updateData.projectId = projectId ? parseInt(projectId) : null;
+    }
     if (dueDate) {
       updateData.dueDate = new Date(dueDate);
     }
@@ -99,6 +123,7 @@ export async function PUT(
       where: { id: ticketId },
       data: updateData,
       include: {
+        project: true, // Include project in response
         assignedTo: {
           include: {
             staffProfile: true,
@@ -152,7 +177,7 @@ export async function DELETE(
 
     const { id } = await params;
     const ticketId = parseInt(id);
-    
+
     // Check if ticket exists and get creator info
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },

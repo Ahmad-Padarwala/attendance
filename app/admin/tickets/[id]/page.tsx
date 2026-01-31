@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import TicketComments from '@/components/TicketComments';
+import CreateTicketModal from '@/components/CreateTicketModal';
 
 interface Ticket {
   id: number;
@@ -11,6 +12,9 @@ interface Ticket {
   description: string;
   status: string;
   priority: string;
+  ticketType: string;
+  storyPoints?: number | null;
+  parentId?: number | null;
   dueDate: string;
   createdAt: string;
   updatedAt: string;
@@ -28,7 +32,21 @@ interface Ticket {
       fullName: string;
     };
   };
+  parent?: {
+    id: number;
+    ticketNumber: string;
+    title: string;
+    ticketType: string;
+  };
+  subtasks?: Ticket[];
   comments: any[];
+  project?: {
+    id: number;
+    name: string;
+    description?: string;
+    color: string;
+  };
+  projectId?: number | null;
 }
 
 export default function AdminTicketDetailPage() {
@@ -38,14 +56,17 @@ export default function AdminTicketDetailPage() {
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [staffList, setStaffList] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editForm, setEditForm] = useState({
     status: '',
     priority: '',
     assignedToId: '',
     dueDate: '',
+    projectId: '',
   });
 
   useEffect(() => {
@@ -67,6 +88,7 @@ export default function AdminTicketDetailPage() {
     setCurrentUserId(parsedUser.id);
     fetchTicket();
     fetchStaff();
+    fetchProjects();
   }, [router, ticketId]);
 
   const fetchTicket = async () => {
@@ -87,6 +109,7 @@ export default function AdminTicketDetailPage() {
           priority: data.ticket.priority,
           assignedToId: data.ticket.assignedToId?.toString() || '',
           dueDate: new Date(data.ticket.dueDate).toISOString().split('T')[0],
+          projectId: data.ticket.projectId?.toString() || '',
         });
       } else {
         router.push('/admin/tickets');
@@ -117,6 +140,24 @@ export default function AdminTicketDetailPage() {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/projects', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
+
   const handleUpdate = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -131,6 +172,7 @@ export default function AdminTicketDetailPage() {
           priority: editForm.priority,
           assignedToId: editForm.assignedToId || null,
           dueDate: editForm.dueDate,
+          projectId: editForm.projectId || null,
         }),
       });
 
@@ -196,6 +238,67 @@ export default function AdminTicketDetailPage() {
     }
   };
 
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'LOW':
+        return (
+          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        );
+      case 'MEDIUM':
+        return (
+          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        );
+      case 'HIGH':
+        return (
+          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        );
+      case 'CRITICAL':
+        return (
+          <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'EPIC':
+        return '🎯';
+      case 'STORY':
+        return '📖';
+      case 'IMPROVEMENT':
+        return '⚡';
+      case 'BUG':
+        return '🐛';
+      default:
+        return '📝';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'EPIC':
+        return 'bg-purple-100 text-purple-700 border-purple-300';
+      case 'STORY':
+        return 'bg-green-100 text-green-700 border-green-300';
+      case 'IMPROVEMENT':
+        return 'bg-blue-100 text-blue-700 border-blue-300';
+      case 'BUG':
+        return 'bg-red-100 text-red-700 border-red-300';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-300';
+    }
+  };
+
   if (loading || !ticket) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -209,30 +312,55 @@ export default function AdminTicketDetailPage() {
       <div className="w-[95%] mx-auto py-8">
         {/* Back Button */}
         <button
-          onClick={() => router.push('/admin/tickets')}
+          onClick={() => router.push('/tickets')}
           className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-800 font-semibold transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back to Tickets
+          Back to All Tickets
         </button>
+
+        {/* Parent Ticket Breadcrumb */}
+        {ticket.parent && (
+          <div className="mb-4 bg-white rounded-lg shadow-sm p-3 border border-gray-200">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-500 font-medium">Parent:</span>
+              <button
+                onClick={() => router.push(`/admin/tickets/${ticket.parent!.id}`)}
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold transition-colors"
+              >
+                <span>{getTypeIcon(ticket.parent.ticketType)}</span>
+                <span>{ticket.parent.ticketNumber}</span>
+                <span>-</span>
+                <span>{ticket.parent.title}</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Ticket Details */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-              <div className="flex items-start justify-between mb-4">
+              {/* Clean Header */}
+              <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
+                  <span className="text-2xl">{getTypeIcon(ticket.ticketType)}</span>
                   <span className="text-2xl font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-lg">
                     {ticket.ticketNumber}
                   </span>
-                  <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getStatusColor(ticket.status)}`}>
-                    {ticket.status.replace('_', ' ')}
+                  <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${getTypeColor(ticket.ticketType)}`}>
+                    {ticket.ticketType}
                   </span>
-                  <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getPriorityColor(ticket.priority)}`}>
-                    {ticket.priority}
+                  {ticket.storyPoints && (
+                    <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 border border-gray-300">
+                      {ticket.storyPoints} pts
+                    </span>
+                  )}
+                  <span className="flex items-center" title={ticket.priority}>
+                    {getPriorityIcon(ticket.priority)}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -254,10 +382,100 @@ export default function AdminTicketDetailPage() {
               </div>
 
               <h1 className="text-3xl font-bold text-gray-800 mb-4">{ticket.title}</h1>
-              
+
               <div className="prose max-w-none">
                 <p className="text-gray-700 whitespace-pre-wrap">{ticket.description}</p>
               </div>
+
+              {/* Subtasks Section */}
+              {ticket.subtasks && ticket.subtasks.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      Subtasks ({ticket.subtasks.length})
+                    </h3>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg font-semibold text-sm flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Add Subtask
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {ticket.subtasks.map((subtask) => (
+                      <div
+                        key={subtask.id}
+                        onClick={() => router.push(`/admin/tickets/${subtask.id}`)}
+                        className="bg-gray-50 hover:bg-gray-100 rounded-lg p-4 border border-gray-200 hover:border-blue-300 cursor-pointer transition-all group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 flex-1">
+                            <span className="text-lg">{getTypeIcon(subtask.ticketType)}</span>
+                            <span className="text-sm font-bold text-gray-600">{subtask.ticketNumber}</span>
+                            <span className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors flex-1">
+                              {subtask.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {subtask.storyPoints && (
+                              <span className="text-xs font-bold bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                {subtask.storyPoints}pts
+                              </span>
+                            )}
+                            <span className={`px-2 py-1 rounded text-xs font-medium border ${getStatusColor(subtask.status)}`}>
+                              {subtask.status.replace('_', ' ')}
+                            </span>
+                            <span className={`px-2 py-1 rounded text-xs font-semibold border ${getPriorityColor(subtask.priority)}`}>
+                              {subtask.priority}
+                            </span>
+                            {subtask.assignedTo && (
+                              <span className="text-xs text-gray-600">
+                                {subtask.assignedTo.staffProfile?.fullName || subtask.assignedTo.email}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* No Subtasks - Show Create Button */}
+              {(!ticket.subtasks || ticket.subtasks.length === 0) && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      Subtasks
+                    </h3>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg font-semibold text-sm flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Add Subtask
+                    </button>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-8 text-center border-2 border-dashed border-gray-300">
+                    <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <p className="text-gray-600 font-medium mb-2">No subtasks yet</p>
+                    <p className="text-sm text-gray-500">Break down this ticket into smaller subtasks</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Comments */}
@@ -335,6 +553,22 @@ export default function AdminTicketDetailPage() {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Project</label>
+                    <select
+                      value={editForm.projectId}
+                      onChange={(e) => setEditForm({ ...editForm, projectId: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-900"
+                    >
+                      <option value="">-- No Project --</option>
+                      {projects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <button
                     onClick={handleUpdate}
                     className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold shadow-md"
@@ -355,6 +589,21 @@ export default function AdminTicketDetailPage() {
                   </div>
 
                   <div>
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Project</p>
+                    {ticket.project ? (
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: ticket.project.color }}
+                        ></span>
+                        <p className="text-gray-800 font-medium">{ticket.project.name}</p>
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 font-medium italic">No Project</p>
+                    )}
+                  </div>
+
+                  <div>
                     <p className="text-sm font-semibold text-gray-600 mb-1">Created By</p>
                     <p className="text-gray-800 font-medium">
                       {ticket.createdBy.staffProfile?.fullName || 'Admin'}
@@ -363,11 +612,10 @@ export default function AdminTicketDetailPage() {
 
                   <div>
                     <p className="text-sm font-semibold text-gray-600 mb-1">Due Date</p>
-                    <p className={`text-gray-800 font-medium flex items-center gap-2 ${
-                      new Date(ticket.dueDate) < new Date() && ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED'
-                        ? 'text-red-600'
-                        : ''
-                    }`}>
+                    <p className={`text-gray-800 font-medium flex items-center gap-2 ${new Date(ticket.dueDate) < new Date() && ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED'
+                      ? 'text-red-600'
+                      : ''
+                      }`}>
                       {new Date(ticket.dueDate).toLocaleDateString('en-US', {
                         month: 'long',
                         day: 'numeric',
@@ -412,6 +660,18 @@ export default function AdminTicketDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Ticket Modal */}
+      {showCreateModal && (
+        <CreateTicketModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            fetchTicket();
+          }}
+          defaultParentId={ticket.id}
+        />
+      )}
     </div>
   );
 }

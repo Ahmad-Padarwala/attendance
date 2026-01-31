@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const assignedToId = searchParams.get('assignedToId');
     const priority = searchParams.get('priority');
+    const ticketType = searchParams.get('type');
 
     const where: any = {};
     // Only add to where clause if value exists and is not empty
@@ -30,6 +31,9 @@ export async function GET(request: NextRequest) {
     }
     if (priority && priority !== '' && priority.trim() !== '') {
       where.priority = priority;
+    }
+    if (ticketType && ticketType !== '' && ticketType.trim() !== '') {
+      where.ticketType = ticketType;
     }
 
     const tickets = await prisma.ticket.findMany({
@@ -87,8 +91,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
-    const { title, description, assignedToId, priority, dueDate } = body;
+
+    const { title, description, assignedToId, priority, dueDate, ticketType, storyPoints, parentId } = body;
 
     if (!title || !description || !dueDate) {
       return NextResponse.json(
@@ -126,9 +130,12 @@ export async function POST(request: NextRequest) {
         title,
         description,
         priority: priority || 'MEDIUM',
+        ticketType: ticketType || 'STORY',
+        storyPoints: storyPoints ? parseInt(storyPoints) : null,
         status: 'OPEN',
         dueDate: parsedDate,
         assignedToId: assignedToId ? parseInt(assignedToId) : null,
+        parentId: parentId ? parseInt(parentId) : null,
         createdById: decoded.userId,
       },
       include: {
