@@ -105,11 +105,14 @@ export async function PUT(
     const { id } = await params;
     const ticketId = parseInt(id);
     const body = await request.json();
-    const { projectId } = body;
+    const { projectId, status } = body;
 
     const updateData: any = {};
     if (projectId !== undefined) {
       updateData.projectId = projectId ? parseInt(projectId) : null;
+    }
+    if (status !== undefined) {
+      updateData.status = status;
     }
 
     // Ensure we are only updating if data is present

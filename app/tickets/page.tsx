@@ -140,7 +140,8 @@ export default function PublicTicketsPage() {
     const handleStatusChange = async (ticketId: number, newStatus: string) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`/api/admin/tickets/${ticketId}`, {
+            const apiPath = userRole === 'ADMIN' ? '/api/admin/tickets' : '/api/staff/tickets';
+            const response = await fetch(`${apiPath}/${ticketId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
